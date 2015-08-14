@@ -31,5 +31,10 @@
     "app/bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "resolutions": {
+    "polymer": "^0.3.0",
+    "paper-input": "^1.0.0",
+    "marked": "~0.3.3"
+  }
 }
