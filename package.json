@@ -11,7 +11,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "./node_modules/.bin/static app -p 8082"
+    "serve": "./node_modules/.bin/static . -p 8082"
   },
   "repository": {
     "type": "git",
