@@ -1,0 +1,180 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../ipfs-api/ipfs-api.html">
+<link rel="import" href="../aolog-api/aolog-api.html">
+<link rel="import" href="../browser-buffer/browser-buffer.html">
+
+<dom-module id="feed-view">
+  <style>
+    :host {
+      display: block;
+    }
+    .entry {
+      min-height: 50px;
+      background: white;
+      margin: 4px;
+    }
+    .name {
+      font-weight: bold;
+      margin: 8px;
+      clear: right;
+    }
+    .title {
+      margin: 8px;
+    }
+    .icon {
+      margin: 4px;
+      width: 50px;
+      height: 50px;
+      background: #fafafa;
+    }
+    .feed {
+      overflow-y: auto;
+    }
+    button {
+      border: 0;
+      border-radius: 4px;
+      padding: 4px 10px;
+      background: #03a9f4;
+      color: white;
+    }
+  </style>
+
+  <template>
+    <ipfs-api></ipfs-api>
+    <aolog-api></aolog-api>
+    <browser-buffer></browser-buffer>
+    <div class="feed">
+      <template is="dom-repeat" items="{{items}}" id="posts">
+        <paper-material class="entry layout horizontal">
+          <img class="icon" src="{{img}}"/>
+          <div class="flex">
+            <div class="name">{{data.name}}</div>
+            <div class="title">{{item.title}}</div>
+          </div>
+        </paper-material>
+      </template>
+    </div>
+	  <template is="dom-if" if="{{!exausted}}">
+      <div class="box layout end-justified">
+        <button on-click="loadMessages">load more</button>
+      </div>
+    </template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'feed-view',
+      ready: function() {
+        var self = this
+
+        self.items = []
+
+        var ipfscomponent = self.$$('ipfs-api')
+
+        self.path = this.getAttribute('path')
+        self.ipfs = ipfscomponent.api
+        self.aolog = self.$$('aolog-api').api
+        self.Buffer = self.$$('browser-buffer').Buffer
+      },
+      load: function (path) {
+        var self = this
+        self.path = path
+        self.ipfs.object.get(path, function (err, res) {
+          if (err) throw err
+
+          self.linkmap = {}
+          for (var i = 0 ; i < res.Links.length ; i++) {
+            self.linkmap[res.Links[i].Name] = {
+              Name: res.Links[i].Name,
+              Size: res.Links[i].Size,
+              Hash: res.Links[i].Hash
+            }
+          }
+
+          self.data = JSON.parse(res.Data)
+
+          //var img = ipfscomponent.url('/ipfs/' + self.linkmap.img.Hash)
+
+          self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
+            if (err) throw err
+            self.log = res
+            self.iterator = res.reverseIterator()
+            self.loadMessages()
+          })
+        })
+      },
+      loadMessages: function () {
+        var num = 30
+        var self = this
+        if (self.exausted) return
+        self.iterator.take(num, function (err, res) {
+          if (err) throw err
+          if (res.length > num) return self.exausted = true
+          // self.items = res
+          for (var i = 0 ; i < res.length ; i++) {
+            self.push('items', res[i])
+          }
+
+          if (self.items.length === self.log.count) {
+            self.exausted = true
+          }
+        })
+      },
+      append: function (item) {
+        var self = this
+        self.unshift('items', item)
+
+        console.log('pritso')
+        console.log(item)
+
+        self.log.append(item, function (err, newlog) {
+
+          console.log(newlog)
+
+          if (err) throw err
+          self.log = newlog
+          self.persist()
+        })
+      },
+      persist: function () {
+        var self = this
+
+        console.log('persist')
+        console.log(self.log)
+
+        self.log.persist(function (err, persisted) {
+
+          self.linkmap.log.Hash = persisted.Hash
+          self.linkmap.log.Size = persisted.Size
+
+          if (err) throw err
+
+          var obj = new self.Buffer(JSON.stringify({
+            Data: JSON.stringify(self.data),
+            Links: _.map(self.linkmap, function (x) { return x })
+          }))
+
+          self.ipfs.object.put(obj, 'json', function (err, res) {
+            if (err) throw err
+            console.log('1')
+            console.log(res)
+            self.ipfs.name.publish(res.Hash, function (err, res) {
+              if (err) throw err
+              console.log('2')
+              console.log(res)
+            })
+          })
+        })
+      }
+    });
+  </script>
+</dom-module>

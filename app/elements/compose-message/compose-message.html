@@ -1,0 +1,122 @@
+
+<link rel="import" href="../ipfs-api/ipfs-api.html">
+<link rel="import" href="../aolog-api/aolog-api.html">
+<link rel="import" href="../../bower_components/basic-autosize-textarea/basic-autosize-textarea.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/mark-down/mark-down.html">
+<link rel="import" href="../browser-buffer/browser-buffer.html">
+
+<dom-module id="compose-message">
+  <style>
+    :host {
+      display: block;
+    }
+    button {
+      border: 0;
+      border-radius: 4px;
+      padding: 4px 10px;
+      background: #03a9f4;
+      color: white;
+    }
+    button:disabled {
+      background: #aaa;
+    }
+    paper-material {
+      background: white;
+    }
+    .box {
+      background: white;
+      border-radius: 4px;
+      padding: 6px;
+      max-width: 600px;
+      margin: 6px 4px 0 4px;;
+    }
+    basic-autosize-textarea {
+      margin-bottom: 4px;
+    }
+    #title {
+      margin-top: 6px;
+    }
+    section {
+      padding: 6px;
+    }
+  </style>
+  <template>
+    <ipfs-api></ipfs-api>
+    <aolog-api></aolog-api>
+    <browser-buffer></browser-buffer>
+
+    <paper-material>
+      <paper-tabs selected="{{section}}">
+        <paper-tab>Compose</paper-tab>
+        <paper-tab on-click="preview">Preview</paper-tab>
+      </paper-tabs>
+
+      <iron-pages selected="{{section}}">
+        <section>
+          <basic-autosize-textarea value="{{title}}"
+                                   id="title"
+                                   placeholder="Title">
+          </basic-autosize-textarea>
+          <basic-autosize-textarea id="body"
+                                   value="{{body}}"
+                                   placeholder="Body (markdown)"
+                                   minimum-rows="20">
+          </basic-autosize-textarea>
+        </section>
+        <section>
+          <h1>{{title}}</h1>
+          <div id="preview"></div>
+          <div class="layout flex horizontal end-justified">
+            <button on-click="post">post</button>
+          </div>
+        </section>
+      </iron-pages>
+    </paper-material>
+  </template>
+
+  <script src="../../bower_components/lodash/lodash.js"></script>
+
+  <script>
+    (function () {
+
+      var random_id = function () {
+        return (Math.random() * 10000000000000000).toString(36)
+      }
+
+      Polymer({
+        is: 'compose-message',
+        ready: function() {
+          var self = this
+          var feedhash = this.getAttribute('hash')
+          self.Buffer = this.$$('browser-buffer').Buffer
+          self.section = 0
+          self.id = random_id()
+
+          var ipfscomponent = self.$$('ipfs-api')
+
+          self.ipfs = ipfscomponent.api
+          self.aolog = self.$$('aolog-api').api
+        },
+        preview: function () {
+          console.log(this.$.preview)
+          this.$.preview.innerHTML = '<mark-down>' + this.body + '<mark-down>'
+        },
+        clear: function () {
+          this.title = ""
+          this.body = ""
+          this.id = random_id()
+          this.section = 0
+        },
+        post: function () {
+          this.fire('post', {title: this.title,
+                             id: this.id,
+                             body: this.body})
+          this.clear()
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

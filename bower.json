@@ -1,0 +1,35 @@
+{
+  "name": "polymer-starter-kit",
+  "dependencies": {
+    "iron-elements": "PolymerElements/iron-elements#1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#1.0.1",
+    "platinum-elements": "PolymerElements/platinum-elements#1.0.1",
+    "neon-elements": "PolymerElements/neon-elements#1.0.0",
+    "page": "visionmedia/page.js#~1.6.3",
+    "basic-autosize-textarea": "basic-web-components/basic-autosize-textarea#master",
+    "event-infinite-scroll": "chadliu23/event-infinite-scroll#master",
+    "more-routing": "Polymore/more-routing#~1.0.0",
+    "page.js": "~1.6.3",
+    "app-router": "~2.6.1",
+    "markdown-awesome": "~0.0.1",
+    "mark-down": "robdodson/mark-down#~1.0.0",
+    "lodash": "~3.10.1"
+  },
+  "devDependencies": {
+    "web-component-tester": "*",
+    "test-fixture": "PolymerElements/test-fixture#^1.0.0"
+  },
+  "version": "0.0.0",
+  "authors": [
+    "Kristoffer Ström <kristoffer@rymdkoloni.se>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ]
+}

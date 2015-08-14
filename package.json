@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "aolog": "^1.0.1",
+    "ipfs-api": "^2.1.1"
+  },
+  "scripts": {
+    "test": "gulp test:local",
+    "start": "gulp serve"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  }
+}

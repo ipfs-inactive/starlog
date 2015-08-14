@@ -1,0 +1,136 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starlog</title>
+  <!-- Place favicon.ico in the `app/` directory -->
+
+  <!-- build:css styles/main.css -->
+  <link rel="stylesheet" href="styles/main.css">
+  <!-- endbuild-->
+
+  <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <!-- endbuild -->
+
+  <!-- will be replaced with elements/elements.vulcanized.html -->
+  <link rel="import" href="elements/elements.html">
+  <!-- endreplace-->
+</head>
+
+<body unresolved class="fullbleed layout vertical">
+  <template is="dom-bind" id="app">
+    <ipfs-api id="ipfs"></ipfs-api>
+    <iron-pages attr-for-selected="data-route" selected="{{route}}">
+      <section data-route="home">
+        <paper-drawer-panel id="drawer">
+          <div drawer class="offset">
+            <feed-view id="feed"
+                       events="{{events}}">
+            </feed-view>
+          </div>
+          <div main class="offset">
+            <compose-message id="compose" on-post="post">
+            </compose-message>
+          </div>
+        </paper-drawer-panel>
+      </section>
+      <section data-route="feed">
+        poing
+      </section>
+
+      <section data-route="reading">
+        <paper-drawer-panel id="drawer2">
+          <div drawer>
+          </div>
+        </paper-drawer-panel>
+      </section>
+      <section data-route="feed">
+        poing
+      </section>
+
+      <section data-route="init">
+        <initialize-feed></initialize-feed>
+      </section>
+
+    </iron-pages>
+    <paper-toolbar mode="seamed" class="paper-header">
+      <paper-tabs selected="{{page}}">
+        <paper-tab>Compose</paper-tab>
+        <paper-tab>Reading list</paper-tab>
+      </paper-tabs>
+    </paper-toolbar>
+  </template>
+</body>
+
+<script>
+var self = document.querySelector('#app')
+
+self.post = function (env) {
+  self.$.drawer.openDrawer()
+  self.$.feed.append(env.detail)
+  self.$.compose.clear()
+}
+
+self.properties = {
+  page: {
+    type: Number,
+    observer: 'pageChanged'
+  }
+}
+
+self.pageChanged = function () {
+
+  console.log('this.route')
+  console.log(this.route)
+
+  if (!this.route) return
+  if (this.page === 0 && this.route != 'home') {
+    page('/app')
+  } else if (this.page === 1) {
+    page('/reading')
+  }
+}
+
+self.addEventListener('dom-change', function () {
+  var ipfs = document.querySelector('ipfs-api').api
+
+  this.page = 0
+
+  ipfs.id(function (err, res) {
+    if (err) throw err
+    var path = '/ipns/' + res.ID
+
+    ipfs.object.get(path, function (err, res) {
+      if (err) throw err
+      console.log(res)
+
+      var type
+      try {
+        type = JSON.parse(res.Data).type
+      } catch (e) {}
+
+      if (type === 'starlog-feed') {
+        self.$.feed.load(path)
+      } else {
+        page('/init')
+      }
+    })
+
+  })
+});
+</script>
+</html>
