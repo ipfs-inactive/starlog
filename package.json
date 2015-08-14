@@ -1,13 +1,28 @@
 {
-  "devDependencies": {
-    "aolog": "^1.0.1",
-    "ipfs-api": "^2.1.1"
+  "name": "starlog",
+  "version": "0.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "dependencies": {
+    "ipfs-api": "^2.1.5",
+    "node-static": "^0.7.7"
   },
+  "devDependencies": {},
   "scripts": {
-    "test": "gulp test:local",
-    "start": "gulp serve"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "./node_modules/.bin/static app -p 8082"
   },
-  "engines": {
-    "node": ">=0.10.0"
-  }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ipfs/starlog.git"
+  },
+  "keywords": [
+    "IPFS"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ipfs/starlog/issues"
+  },
+  "homepage": "https://github.com/ipfs/starlog"
 }

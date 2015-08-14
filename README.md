@@ -1,19 +1,15 @@
-Welcome to Polymer Starter Kit Light!
+starlog
+=======
 
-To begin, fire up a local server from inside the `app` directory. Please make sure to serve up the contents of the directory rather than root as routing will otherwise fail to correctly function.
+[![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io) [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/) [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs) [![Dependency Status](https://david-dm.org/ipfs/starlog.svg?style=flat-square)](https://david-dm.org/ipfs/starlog)
 
-## Firing up a server using Python
+> 
 
-If you are a Windows user, install Python and from inside the `app` directory run:
+# Dev
 
-```
-python -m http.server 8080
-```
-
-or on a Mac/*nix machine, run:
+## Try it out
 
 ```
-python -m SimpleHTTPServer 8080
+$ npm run serve
+# open in localhost:8092
 ```
-
-You can of course also use WAMP or an alternative tool for serving up content. 
