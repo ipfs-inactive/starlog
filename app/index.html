@@ -34,6 +34,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body unresolved class="fullbleed layout vertical">
   <template is="dom-bind" id="app">
     <ipfs-api id="ipfs"></ipfs-api>
+    <paper-toolbar mode="seamed" class="paper-header">
+      <paper-tabs selected="{{page}}">
+        <paper-tab>Compose</paper-tab>
+        <paper-tab>Reading list</paper-tab>
+      </paper-tabs>
+    </paper-toolbar>
     <iron-pages attr-for-selected="data-route" selected="{{route}}">
       <section data-route="home">
         <paper-drawer-panel id="drawer">
@@ -51,12 +57,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <section data-route="feed">
         poing
       </section>
-
       <section data-route="reading">
         <paper-drawer-panel id="drawer2">
           <div drawer>
           </div>
         </paper-drawer-panel>
+      </section>
+      <section data-route="starlog">
+        <starlog-view
+            class="offset"
+            path="{{starlogpath}}"
+            seqnr="{{seqnr}}">
+        </starlog-view>
       </section>
       <section data-route="feed">
         poing
@@ -67,12 +79,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </section>
 
     </iron-pages>
-    <paper-toolbar mode="seamed" class="paper-header">
-      <paper-tabs selected="{{page}}">
-        <paper-tab>Compose</paper-tab>
-        <paper-tab>Reading list</paper-tab>
-      </paper-tabs>
-    </paper-toolbar>
   </template>
 </body>
 
@@ -112,9 +118,9 @@ self.addEventListener('dom-change', function () {
 
   ipfs.id(function (err, res) {
     if (err) throw err
-    var path = '/ipns/' + res.ID
+    var path = res.ID
 
-    ipfs.object.get(path, function (err, res) {
+    ipfs.object.get('/ipns/' + path, function (err, res) {
       if (err) throw err
       console.log(res)
 

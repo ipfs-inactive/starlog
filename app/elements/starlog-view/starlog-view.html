@@ -10,9 +10,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../ipfs-api/ipfs-api.html">
 <link rel="import" href="../aolog-api/aolog-api.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
+<link rel="import" href="../../bower_components/mark-down/mark-down.html">
 
-<dom-module id="feed-view">
+<dom-module id="starlog-view">
   <style>
     :host {
       display: block;
@@ -23,12 +23,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       margin: 4px;
     }
     .name {
-      font-weight: bold;
+      font-style: italic;
       margin: 8px;
       clear: right;
     }
     .title {
       margin: 8px;
+    }
+    h1 {
+      margin: 3px 0 0 8px;
     }
     .icon {
       margin: 4px;
@@ -57,12 +60,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 items="{{items}}"
                 id="posts">
         <paper-material class="entry layout horizontal"
-                        on-click="viewPost"
                         seqnr="{{item.seqnr}}">
           <img class="icon" src="{{img}}"/>
           <div class="flex">
+            <h1>{{item.title}}</h1>
             <div class="name">{{data.name}}</div>
-            <div class="title">{{item.title}}</div>
+            <mark-down text="{{item.body}}"></mark-down>
           </div>
         </paper-material>
       </template>
@@ -76,7 +79,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <script>
     Polymer({
-      is: 'feed-view',
+      is: 'starlog-view',
+      properties: {
+        path: String,
+        seqnr: Number
+      },
+      observers: [
+        'updateLog(path, seqnr)'
+      ],
       ready: function() {
         var self = this
 
@@ -89,10 +99,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         self.aolog = self.$$('aolog-api').api
         self.Buffer = self.$$('browser-buffer').Buffer
       },
-      load: function (path) {
+      updateLog: function (path, seqnr) {
         var self = this
-        self.path = path
-        self.ipfs.object.get('/ipns/' + path, function (err, res) {
+        self.ipfs.object.get('/ipns/' + self.path, function (err, res) {
           if (err) throw err
 
           self.linkmap = {}
@@ -111,77 +120,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
             if (err) throw err
             self.log = res
-            self.iterator = res.iterator({reverse: true})
-            self.loadMessages()
+            self.loadMessage(seqnr)
           })
         })
       },
-      loadMessages: function () {
-        var num = 30
+      loadMessage: function (seqnr) {
         var self = this
-        if (self.exausted) return
-        self.iterator.take(num, function (err, res) {
+        self.iter = self.log.iterator({offset: seqnr})
+        self.iter.next(function (err, res) {
           if (err) throw err
-          if (res.length > num) return self.exausted = true
-          // self.items = res
-          for (var i = 0 ; i < res.length ; i++) {
-
-            res[i].seqnr = self.log.count - self.items.length - 1
-
-            self.push('items', res[i])
-          }
-
-          if (self.items.length === self.log.count) {
-            self.exausted = true
-          }
-        })
-      },
-      append: function (item) {
-        var self = this
-        self.unshift('items', item)
-
-        self.log.append(item, function (err, newlog) {
-
-          console.log(newlog)
-
-          if (err) throw err
-          self.log = newlog
-          self.persist()
-        })
-      },
-      viewPost: function (e) {
-      //console.log(e.model.item.seqnr)
-        alert('/starlog/' + this.path + '/' + e.model.item.seqnr)
-        page('/starlog/' + this.path + '/' + e.model.item.seqnr)
-      },
-      persist: function () {
-        var self = this
-
-        console.log('persist')
-        console.log(self.log)
-
-        self.log.persist(function (err, persisted) {
-
-          self.linkmap.log.Hash = persisted.Hash
-          self.linkmap.log.Size = persisted.Size
-
-          if (err) throw err
-
-          var obj = new self.Buffer(JSON.stringify({
-            Data: JSON.stringify(self.data),
-            Links: _.map(self.linkmap, function (x) { return x })
-          }))
-
-          self.ipfs.object.put(obj, 'json', function (err, res) {
-            if (err) throw err
-            console.log('1')
-            console.log(res)
-            self.ipfs.name.publish(res.Hash, function (err, res) {
-              if (err) throw err
-              console.log('2')
-              console.log(res)
-            })
-          })
+          self.push('items', res)
         })
       }
     });

@@ -17,6 +17,13 @@
       app.route = 'reading';
     });
 
+    page('/starlog/:path/:seqnr', function (e) {
+      app.route = 'starlog';
+      app.starlogpath = e.params.path
+      app.seqnr = e.params.seqnr
+      console.log(arguments)
+    });
+
     page('/feed/:path', function (data) {
       app.route = 'user-info';
       app.params = data.params;
