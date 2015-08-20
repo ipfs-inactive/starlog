@@ -108,6 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 if (err) throw err
                 self.state = 'publishing'
                 self.ipfs.name.publish(res.Hash, function (err, res) {
+                  if (err) throw err
                   self.fire('initialized')
                 })
               })

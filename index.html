@@ -59,7 +59,7 @@
                 <h2>{{name}}</h2>
                 <template is="dom-if" if="{{!compose}}">
                   <p>
-                    <a on-click="followPermalink" href="#">Link to this starlog</a>
+                    <a href="{{permalink}}">Link to this log</a>
                   </p>
                   <p>
                     Select icon
@@ -86,8 +86,7 @@
 
         <section data-route="starlog">
           <paper-drawer-panel
-              force-narrow="true"
-              id="drawer">
+              force-narrow="true">
             <starlog-view
                 id="starlog"
                 path="{{starlogpath}}"
@@ -98,7 +97,7 @@
         </section>
 
         <section data-route="init">
-          <initialize-feed on-initialized="initialized"></initialize-feed>
+          <initialize-feed on-initialized="feedInitialized"></initialize-feed>
         </section>
 
       </iron-pages>
@@ -149,7 +148,8 @@ app.properties = {
   }
 }
 
-app.initialized = function () {
+app.feedInitialized = function () {
+  app.initialize()
   page('/home')
 }
 
@@ -170,7 +170,7 @@ app.pageChanged = function () {
   }
 }
 
-app.addEventListener('dom-change', function () {
+app.initialize = function () {
   var ipfs = document.querySelector('ipfs-api').api
   this.page = 0
   app.compose = false
@@ -187,7 +187,6 @@ app.addEventListener('dom-change', function () {
 
     if (app.id) {
       ipfs.object.get('/ipns/' + app.id, function (err, res) {
-        console.log(err)
         if (err) throw err
 
         var type
@@ -206,6 +205,9 @@ app.addEventListener('dom-change', function () {
       // running on gateway, for example
     }
   })
-});
+}
+
+app.addEventListener('dom-change', app.initialize)
+
 </script>
 </html>
