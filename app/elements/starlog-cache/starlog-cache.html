@@ -1,0 +1,153 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../ipfs-api/ipfs-api.html">
+<link rel="import" href="../aolog-api/aolog-api.html">
+<link rel="import" href="../browser-buffer/browser-buffer.html">
+
+<dom-module id="starlog-cache">
+  <template>
+    <ipfs-api></ipfs-api>
+    <aolog-api></aolog-api>
+    <browser-buffer></browser-buffer>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'starlog-cache',
+      ready: function() {
+        var self = this
+
+        self.items = []
+
+        var ipfscomponent = self.$$('ipfs-api')
+
+        self.path = this.getAttribute('path')
+        self.ipfs = ipfscomponent.api
+        self.aolog = self.$$('aolog-api').api
+        self.Buffer = self.$$('browser-buffer').Buffer
+      },
+      load: function (path, offset, nr, cb) {
+        var self = this
+        self.path = path
+
+        if (typeof offset == 'function') {
+          cb = offset
+          offset = undefined
+        } else if (typeof nr == 'function') {
+          cb = nr
+          nr = undefined
+        }
+
+        // clear all
+        self.splice('items', 0, self.items.length)
+
+        self.ipfs.object.get('/ipns/' + path, function (err, res) {
+          if (err) return cb(err)
+
+          self.linkmap = {}
+          for (var i = 0 ; i < res.Links.length ; i++) {
+            self.linkmap[res.Links[i].Name] = {
+              Name: res.Links[i].Name,
+              Size: res.Links[i].Size,
+              Hash: res.Links[i].Hash
+            }
+          }
+
+          self.data = JSON.parse(res.Data)
+
+          self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
+            if (err) return cb(err)
+            self.log = res
+            self.loadMessages(offset, nr)
+            cb(null, self)
+          })
+        })
+      },
+      loadMessages: function (offset, num) {
+        num = num || 30
+        var self = this
+        if (self.exausted) return
+
+        if (offset == 'latest') offset = 0
+        var iter = self.log.iterator({reverse: true, offset: offset})
+
+        iter.take(num, function (err, res) {
+          if (err) throw err
+          if (res.length > num) return self.exausted = true
+
+          for (var i = 0 ; i < res.length ; i++) {
+            res[i].seqnr = self.log.count - self.items.length - 1
+            self.push('items', res[i])
+          }
+
+          if (self.items.length === self.log.count) {
+            self.exausted = true
+          }
+        })
+      },
+      append: function (item) {
+        var self = this
+
+        self.log.append(item, function (err, newlog) {
+          if (err) throw err
+          self.log = newlog
+          self.persist(function (err) {
+            // annotate with seqnr
+            item.seqnr = newlog.count - 1
+            self.unshift('items', item)
+          })
+        })
+      },
+      setIcon: function (hash, done) {
+        var self = this
+        self.ipfs.object.stat(hash, function (err, res) {
+          if (err) throw err
+
+          self.linkmap.icon = {Name: 'icon',
+                               Size: res.CumulativeSize,
+                               Hash: hash}
+
+          self.persist(done)
+        })
+      },
+      persist: function (done) {
+        var self = this
+
+        self.status = 'Publishing'
+
+        self.log.persist(function (err, persisted) {
+          if (err) throw err
+
+          self.linkmap.log.Hash = persisted.Hash
+          self.linkmap.log.Size = persisted.Size
+
+          console.log('liskmap')
+
+          console.log(_.map(self.linkmap, function (x) { return x }))
+
+          var obj = new self.Buffer(JSON.stringify({
+            Data: JSON.stringify(self.data),
+            Links: _.map(self.linkmap, function (x) { return x })
+          }))
+
+          self.ipfs.object.put(obj, 'json', function (err, res) {
+            if (err) throw err
+            self.ipfs.name.publish(res.Hash, function (err, res) {
+              if (err) throw err
+              self.status = ''
+              done()
+            })
+          })
+        })
+      }
+    });
+  </script>
+</dom-module>

@@ -29,56 +29,102 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- will be replaced with elements/elements.vulcanized.html -->
   <link rel="import" href="elements/elements.html">
   <!-- endreplace-->
+
+  <style is="custom-style">
+    paper-toolbar {
+      height: 60px;
+      --paper-toolbar-background: #000;
+      --paper-toolbar-color: #fff;
+      --paper-toolbar: {
+        font-size: 40px;
+      };
+    }
+  </style>
+
 </head>
 
-<body unresolved class="fullbleed layout vertical">
+<body unresolved class="fullbleed">
   <template is="dom-bind" id="app">
     <ipfs-api id="ipfs"></ipfs-api>
-    <paper-toolbar mode="seamed" class="paper-header">
-      <paper-tabs selected="{{page}}">
-        <paper-tab>Compose</paper-tab>
-        <paper-tab>Reading list</paper-tab>
-      </paper-tabs>
-    </paper-toolbar>
-    <iron-pages attr-for-selected="data-route" selected="{{route}}">
-      <section data-route="home">
-        <paper-drawer-panel id="drawer">
-          <div drawer class="offset" peeking="true">
-            <feed-view id="feed"
-                       events="{{events}}">
-            </feed-view>
-          </div>
-          <div main class="offset">
-            <compose-message id="compose" on-post="post">
-            </compose-message>
-          </div>
-        </paper-drawer-panel>
-      </section>
-      <section data-route="feed">
-        poing
-      </section>
-      <section data-route="reading">
-        <paper-drawer-panel id="drawer2">
-          <div drawer>
-          </div>
-        </paper-drawer-panel>
-      </section>
-      <section data-route="starlog">
-        <starlog-view
-            class="offset"
-            path="{{starlogpath}}"
-            seqnr="{{seqnr}}">
-        </starlog-view>
-      </section>
-      <section data-route="feed">
-        poing
-      </section>
+    <div class="layout vertical">
+      <iron-pages attr-for-selected="data-route"
+                  class="fit offset"
+                  selected="{{route}}">
+        <section data-route="home">
+          <paper-drawer-panel id="drawer">
+            <div drawer peeking="true">
+              <paper-material class="compose"
+                              on-click="onCompose">
+                <iron-icon icon="add"></iron-icon>New post
+              </paper-material>
+              <feed-view id="feed"
+                         status="{{status}}"
+                         editable="true">
+              </feed-view>
+            </div>
+            <paper-material main class="homescreen layout vertical">
+	            <div class="padded">
+                <h2>{{name}}</h2>
+                <template is="dom-if" if="{{!compose}}">
+                  <p>
+                    <a href="{{permalink}}">Link to this starlog</a>
+                  </p>
+                  <p>
+                    Select icon
+                    <ipfs-add-file on-add="updateIcon">
+                    </ipfs-add-file>
+                  </p>
+                </template>
+              </div>
+              <template is="dom-if" if="{{compose}}">
+                <compose-message id="editor"
+                                 on-post="post">
+                </compose-message>
+              </template>
+            </paper-material>
+          </paper-drawer-panel>
+        </section>
 
-      <section data-route="init">
-        <initialize-feed></initialize-feed>
-      </section>
+        <section data-route="reading">
+          <paper-drawer-panel id="drawer2">
+            <div drawer>
+            </div>
+          </paper-drawer-panel>
+        </section>
 
-    </iron-pages>
+        <section data-route="starlog">
+          <paper-drawer-panel
+              force-narrow="true"
+              id="drawer">
+            <starlog-view
+                id="starlog"
+                path="{{starlogpath}}"
+                seqnr="{{seqnr}}"
+                main>
+            </starlog-view>
+          </paper-drawer-panel>
+        </section>
+
+        <section data-route="init">
+          <initialize-feed></initialize-feed>
+        </section>
+
+      </iron-pages>
+      <div class="toolbar layout horizontal justified">
+        <template is="dom-if" if="{{id}}">
+          <paper-toolbar class="paper-header">
+            <paper-tabs selected="{{page}}">
+              <paper-tab>Home</paper-tab>
+              <paper-tab>Reading</paper-tab>
+            </paper-tabs>
+          </paper-toolbar>
+          <div class="spinner layout horizontal center">
+            <span class="status">{{status}}</span>
+            <paper-spinner active="{{status}}"></paper-spinner>
+          </div>
+        </template>
+      </div>
+    </div>
   </template>
 </body>
 
@@ -86,9 +132,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 var self = document.querySelector('#app')
 
 self.post = function (env) {
+
+  console.log(self.$)
+
   self.$.drawer.openDrawer()
   self.$.feed.append(env.detail)
-  self.$.compose.clear()
+  document.querySelector('#editor').clear()
+
+  self.compose = false
+}
+
+self.onCompose = function () {
+  self.compose = true
 }
 
 self.properties = {
@@ -98,11 +153,11 @@ self.properties = {
   }
 }
 
+self.updateIcon = function (ev) {
+  self.$.feed.setIcon(ev.detail)
+}
+
 self.pageChanged = function () {
-
-  console.log('this.route')
-  console.log(this.route)
-
   if (!this.route) return
   if (this.page === 0 && this.route != 'home') {
     page('/app')
@@ -113,29 +168,35 @@ self.pageChanged = function () {
 
 self.addEventListener('dom-change', function () {
   var ipfs = document.querySelector('ipfs-api').api
-
   this.page = 0
+  self.compose = false
 
   ipfs.id(function (err, res) {
-    if (err) throw err
-    var path = res.ID
+    if (err) {
+      return
+    }
+    self.id = res.ID
 
-    ipfs.object.get('/ipns/' + path, function (err, res) {
-      if (err) throw err
-      console.log(res)
+    if (self.id) {
+      ipfs.object.get('/ipns/' + self.id, function (err, res) {
+        console.log(err)
+        if (err) throw err
 
-      var type
-      try {
-        type = JSON.parse(res.Data).type
-      } catch (e) {}
+        var type
+        try {
+          type = JSON.parse(res.Data).type
+          self.name = JSON.parse(res.Data).name
+        } catch (e) {}
 
-      if (type === 'starlog-feed') {
-        self.$.feed.load(path)
-      } else {
-        page('/init')
-      }
-    })
-
+        if (type === 'starlog-feed') {
+          self.$.feed.load(self.id)
+        } else {
+          page('/init')
+        }
+      })
+    } else {
+      // running on gateway, for example
+    }
   })
 });
 </script>

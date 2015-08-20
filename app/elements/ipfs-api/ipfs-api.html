@@ -22,12 +22,7 @@
           if (!this.host) {
             var split = window.location.host.split(":")
             this.host = split[0]
-            this.port = split[1]
-
-            // dev bullshit
-            if (this.port == 8082) {
-              this.port = 5001
-            }
+            this.port = split[1] || 80
           }
 
           this.api = ipfsAPI(this.host, this.port)

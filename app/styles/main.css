@@ -8,9 +8,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 body {
-  background: #fafafa;
+  /* background: #fafafa; */
   font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
+}
+
+iron-pages {
+  /* position: relative; */
+  /* top: 60px; */
+}
+
+iron-icon {
+  width: 50px;
 }
 
 html,body {
@@ -18,13 +27,28 @@ html,body {
   margin: 0;
   background-color: #E5E5E5;
 }
-paper-header-panel {
-  height: 10px;
-}
 paper-toolbar {
-  background: #03a9f4;
+  background: #000;
   color: white;
+}
+.toolbar {
+  background: #000;
   height: 60px;
+}
+
+.homescreen {
+  background: #fff;
+  margin-left: 4px;
+}
+
+.padded {
+  padding-left: 26px;
+  padding-right: 20px;
+  margin-bottom: 8px;
+}
+
+.status {
+  color: #fff;
 }
 #tabs {
   width: 100%;
@@ -50,4 +74,20 @@ paper-toolbar {
 
 .offset {
   margin-top: 60px;
+}
+
+.compose {
+  padding: 20px 0 20px 30px;
+}
+
+paper-spinner {
+  margin: 14px;
+}
+
+.spinner {
+  color: #fff;
+}
+
+.status {
+
 }

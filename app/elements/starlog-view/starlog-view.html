@@ -8,8 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
+<link rel="import" href="../starlog-cache/starlog-cache.html">
 <link rel="import" href="../../bower_components/mark-down/mark-down.html">
 
 <dom-module id="starlog-view">
@@ -23,15 +22,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       margin: 4px;
     }
     .name {
-      font-style: italic;
+      font-weight: bold;
       margin: 8px;
       clear: right;
     }
     .title {
       margin: 8px;
-    }
-    h1 {
-      margin: 3px 0 0 8px;
     }
     .icon {
       margin: 4px;
@@ -52,9 +48,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
 
   <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
+    <starlog-cache
+        id="cache"
+        items="{{items}}">
+    </starlog-cache>
     <div class="feed">
       <template is="dom-repeat"
                 items="{{items}}"
@@ -81,56 +78,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'starlog-view',
       properties: {
-        path: String,
-        seqnr: Number
+        name: String
       },
       observers: [
-        'updateLog(path, seqnr)'
+        'load(path, seqnr)'
       ],
       ready: function() {
         var self = this
-
         self.items = []
-
-        var ipfscomponent = self.$$('ipfs-api')
-
         self.path = this.getAttribute('path')
-        self.ipfs = ipfscomponent.api
-        self.aolog = self.$$('aolog-api').api
-        self.Buffer = self.$$('browser-buffer').Buffer
       },
-      updateLog: function (path, seqnr) {
-        var self = this
-        self.ipfs.object.get('/ipns/' + self.path, function (err, res) {
-          if (err) throw err
-
-          self.linkmap = {}
-          for (var i = 0 ; i < res.Links.length ; i++) {
-            self.linkmap[res.Links[i].Name] = {
-              Name: res.Links[i].Name,
-              Size: res.Links[i].Size,
-              Hash: res.Links[i].Hash
-            }
-          }
-
-          self.data = JSON.parse(res.Data)
-
-          //var img = ipfscomponent.url('/ipfs/' + self.linkmap.img.Hash)
-
-          self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
-            if (err) throw err
-            self.log = res
-            self.loadMessage(seqnr)
-          })
-        })
-      },
-      loadMessage: function (seqnr) {
-        var self = this
-        self.iter = self.log.iterator({offset: seqnr})
-        self.iter.next(function (err, res) {
-          if (err) throw err
-          self.push('items', res)
-        })
+      load: function (path, seqnr) {
+        this.path = path
+        this.$.cache.load(path, seqnr, seqnr != 'latest' ? 1 : undefined)
       }
     });
   </script>

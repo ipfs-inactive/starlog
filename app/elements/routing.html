@@ -5,7 +5,19 @@
     // We use Page.js for routing. This is a Micro
     // client-side router inspired by the Express router
     // More info: https://visionmedia.github.io/page.js/
+
+
+    // workaround
     page('/app', function () {
+      page('/home')
+    });
+
+    page('/ipfs/:a/:b', function () {
+      page('/home')
+    });
+    // end workaround
+
+    page('/home', function () {
       app.route = 'home';
     });
 
@@ -17,11 +29,15 @@
       app.route = 'reading';
     });
 
+    page('/starlog/:path', function (e) {
+      app.route = 'starlog';
+      app.starlogpath = e.params.path
+    });
+
     page('/starlog/:path/:seqnr', function (e) {
       app.route = 'starlog';
       app.starlogpath = e.params.path
       app.seqnr = e.params.seqnr
-      console.log(arguments)
     });
 
     page('/feed/:path', function (data) {

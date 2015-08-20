@@ -80,11 +80,6 @@
 
   <script>
     (function () {
-
-      var random_id = function () {
-        return (Math.random() * 10000000000000000).toString(36)
-      }
-
       Polymer({
         is: 'compose-message',
         ready: function() {
@@ -92,7 +87,6 @@
           var feedhash = this.getAttribute('hash')
           self.Buffer = this.$$('browser-buffer').Buffer
           self.section = 0
-          self.id = random_id()
 
           var ipfscomponent = self.$$('ipfs-api')
 
@@ -106,12 +100,10 @@
         clear: function () {
           this.title = ""
           this.body = ""
-          this.id = random_id()
           this.section = 0
         },
         post: function () {
           this.fire('post', {title: this.title,
-                             id: this.id,
                              body: this.body})
           this.clear()
         }

@@ -11,5 +11,5 @@ starlog
 
 ```
 $ npm run serve
-# open in localhost:8092
+# open in localhost:8082
 ```
