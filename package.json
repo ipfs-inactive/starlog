@@ -11,7 +11,8 @@
   "devDependencies": {
     "express": "^4.13.3",
     "request": "^2.61.0",
-    "serve-static": "^1.10.0"
+    "serve-static": "^1.10.0",
+    "vulcanize": "^1.10.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

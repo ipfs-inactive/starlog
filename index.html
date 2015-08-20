@@ -160,7 +160,7 @@ self.updateIcon = function (ev) {
 self.pageChanged = function () {
   if (!this.route) return
   if (this.page === 0 && this.route != 'home') {
-    page('/app')
+    page('/')
   } else if (this.page === 1) {
     page('/reading')
   }
