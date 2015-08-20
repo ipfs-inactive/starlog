@@ -52,6 +52,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <h1>{{status}}</h1>
     <starlog-cache
         id="cache"
+        on-icon="gotIcon"
         status="{{status}}"
         items="{{items}}">
     </starlog-cache>
@@ -95,13 +96,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         self.items = []
         self.path = this.getAttribute('path')
       },
-      load: function (path, cb) {
+      load: function (path) {
         var self = this
         self.path = path
-        self.$.cache.load(path, function (err, res) {
-          if (err) throw err
-          self.icon = '/ipfs/' + res.linkmap.icon.Hash
-        })
+        self.$.cache.load(path)
+      },
+      gotIcon: function (ev) {
+        this.icon = '/ipfs/' + ev.detail
       },
       append: function (item) {
         this.$.cache.append(item)
@@ -110,7 +111,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.cache.setIcon(item, done)
       },
       viewPost: function (e) {
-        page('/starlog/' + this.path + '/' + e.model.item.seqnr)
+        this.fire('view', {path: this.path,
+                           seqnr: e.model.item.seqnr})
       }
     });
   </script>

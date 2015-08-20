@@ -1,13 +1,4 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 
 <html lang="">
 
@@ -58,16 +49,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <iron-icon icon="add"></iron-icon>New post
               </paper-material>
               <feed-view id="feed"
+                         on-view="viewPost"
                          status="{{status}}"
                          editable="true">
               </feed-view>
             </div>
             <paper-material main class="homescreen layout vertical">
-	            <div class="padded">
+              <div class="padded">
                 <h2>{{name}}</h2>
                 <template is="dom-if" if="{{!compose}}">
                   <p>
-                    <a href="{{permalink}}">Link to this starlog</a>
+                    <a on-click="followPermalink" href="#">Link to this starlog</a>
                   </p>
                   <p>
                     Select icon
@@ -106,12 +98,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </section>
 
         <section data-route="init">
-          <initialize-feed></initialize-feed>
+          <initialize-feed on-initialized="initialized"></initialize-feed>
         </section>
 
       </iron-pages>
       <div class="toolbar layout horizontal justified">
-        <template is="dom-if" if="{{id}}">
+        <template is="dom-if" if="{{!readonly}}">
           <paper-toolbar class="paper-header">
             <paper-tabs selected="{{page}}">
               <paper-tab>Home</paper-tab>
@@ -129,67 +121,83 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </body>
 
 <script>
-var self = document.querySelector('#app')
+var app = document.querySelector('#app')
 
-self.post = function (env) {
+app.post = function (env) {
 
-  console.log(self.$)
+  console.log(app.$)
 
-  self.$.drawer.openDrawer()
-  self.$.feed.append(env.detail)
+  app.$.drawer.openDrawer()
+  app.$.feed.append(env.detail)
   document.querySelector('#editor').clear()
 
-  self.compose = false
+  app.compose = false
 }
 
-self.onCompose = function () {
-  self.compose = true
+app.followPermalink = function () {
+  page(app.permalink)
 }
 
-self.properties = {
+app.onCompose = function () {
+  app.compose = true
+}
+
+app.properties = {
   page: {
     type: Number,
     observer: 'pageChanged'
   }
 }
 
-self.updateIcon = function (ev) {
-  self.$.feed.setIcon(ev.detail)
+app.initialized = function () {
+  page('/home')
 }
 
-self.pageChanged = function () {
+app.updateIcon = function (ev) {
+  app.$.feed.setIcon(ev.detail)
+}
+
+app.viewPost = function (ev) {
+  page('/starlog/' + ev.detail.path + '/' + ev.detail.seqnr)
+}
+
+app.pageChanged = function () {
   if (!this.route) return
   if (this.page === 0 && this.route != 'home') {
-    page('/')
+    page('/home')
   } else if (this.page === 1) {
     page('/reading')
   }
 }
 
-self.addEventListener('dom-change', function () {
+app.addEventListener('dom-change', function () {
   var ipfs = document.querySelector('ipfs-api').api
   this.page = 0
-  self.compose = false
+  app.compose = false
 
   ipfs.id(function (err, res) {
     if (err) {
+      app.readonly = true
       return
     }
-    self.id = res.ID
+    app.readonly = false
 
-    if (self.id) {
-      ipfs.object.get('/ipns/' + self.id, function (err, res) {
+    app.id = res.ID
+    app.permalink = '/starlog/' + app.id + '/latest'
+
+    if (app.id) {
+      ipfs.object.get('/ipns/' + app.id, function (err, res) {
         console.log(err)
         if (err) throw err
 
         var type
         try {
           type = JSON.parse(res.Data).type
-          self.name = JSON.parse(res.Data).name
+          app.name = JSON.parse(res.Data).name
         } catch (e) {}
 
         if (type === 'starlog-feed') {
-          self.$.feed.load(self.id)
+          app.$.feed.load(app.id)
         } else {
           page('/init')
         }

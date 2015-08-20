@@ -10,13 +10,16 @@
   },
   "devDependencies": {
     "express": "^4.13.3",
+    "open-url": "^2.0.2",
     "request": "^2.61.0",
     "serve-static": "^1.10.0",
     "vulcanize": "^1.10.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "node serve.js"
+    "serve": "node serve.js",
+    "local": "node_modules/.bin/open-url localhost:5001/ipfs/$(./build.sh)",
+    "gateway": "node_modules/.bin/open-url gateway.ipfs.io/ipfs/$(./build.sh)"
   },
   "repository": {
     "type": "git",

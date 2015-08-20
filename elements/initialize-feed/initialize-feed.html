@@ -93,8 +93,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             empty.persist(function (err, logres) {
               if (err) throw err
 
-              console.log(self.Buffer)
-
               var obj = new self.Buffer(JSON.stringify({
                 Data: JSON.stringify({
                   type: 'starlog-feed',
@@ -110,7 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 if (err) throw err
                 self.state = 'publishing'
                 self.ipfs.name.publish(res.Hash, function (err, res) {
-                  page('/app')
+                  self.fire('initialized')
                 })
               })
             })

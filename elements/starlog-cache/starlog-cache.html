@@ -34,23 +34,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         self.aolog = self.$$('aolog-api').api
         self.Buffer = self.$$('browser-buffer').Buffer
       },
-      load: function (path, offset, nr, cb) {
+      load: function (path, offset, nr) {
         var self = this
         self.path = path
-
-        if (typeof offset == 'function') {
-          cb = offset
-          offset = undefined
-        } else if (typeof nr == 'function') {
-          cb = nr
-          nr = undefined
-        }
 
         // clear all
         self.splice('items', 0, self.items.length)
 
         self.ipfs.object.get('/ipns/' + path, function (err, res) {
-          if (err) return cb(err)
+          if (err) throw err
 
           self.linkmap = {}
           for (var i = 0 ; i < res.Links.length ; i++) {
@@ -61,13 +53,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
           }
 
+          if (self.linkmap.icon) {
+            self.fire('icon', self.linkmap.icon.Hash)
+          }
+
           self.data = JSON.parse(res.Data)
 
           self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
-            if (err) return cb(err)
+            if (err) throw err
             self.log = res
             self.loadMessages(offset, nr)
-            cb(null, self)
           })
         })
       },
@@ -128,10 +123,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           self.linkmap.log.Hash = persisted.Hash
           self.linkmap.log.Size = persisted.Size
-
-          console.log('liskmap')
-
-          console.log(_.map(self.linkmap, function (x) { return x }))
 
           var obj = new self.Buffer(JSON.stringify({
             Data: JSON.stringify(self.data),

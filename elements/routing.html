@@ -2,15 +2,22 @@
 <script>
   window.addEventListener('WebComponentsReady', function() {
 
-    // workaround
-    page('/ipfs/:a', function () {
-      page('/')
-    });
-    // end workaround
+    var app = document.querySelector('#app')
+    console.log('app', app)
 
     page('/', function () {
+      page('/home')
+    });
+
+    page('/home', function () {
       app.route = 'home';
     });
+
+    // workaround
+    page('/ipfs/:a', function () {
+      page('/home')
+    });
+    // end workaround
 
     page('/init', function () {
       app.route = 'init';

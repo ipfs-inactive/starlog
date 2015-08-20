@@ -49,6 +49,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <template>
     <starlog-cache
+        on-icon="setIcon"
         id="cache"
         items="{{items}}">
     </starlog-cache>
@@ -58,7 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 id="posts">
         <paper-material class="entry layout horizontal"
                         seqnr="{{item.seqnr}}">
-          <img class="icon" src="{{img}}"/>
+          <img class="icon" src="{{icon}}"/>
           <div class="flex">
             <h1>{{item.title}}</h1>
             <div class="name">{{data.name}}</div>
@@ -83,6 +84,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       observers: [
         'load(path, seqnr)'
       ],
+      setIcon: function (icon) {
+        this.icon = '/ipfs/' + icon.detail
+      },
       ready: function() {
         var self = this
         self.items = []
