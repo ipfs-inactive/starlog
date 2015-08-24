@@ -98,10 +98,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   type: 'starlog-feed',
                   name: self.$.name.value
                 }),
+                // Links: [{
+                //   Name: 'log',
+                //   Hash: logres.Hash,
+                //   Size: logres.Size
+                // }]}))
+
                 Links: [{
                   Name: 'log',
-                  Hash: logres.Hash,
-                  Size: logres.Size
+                  Hash: 'QmPpGqe9m4nq5hebBu9yfX5t7niwuycfjTQX6Y1YhKJ97C',
+                  Size: 1806394
                 }]}))
 
               self.ipfs.object.put(obj, 'json', function (err, res) {

@@ -1,0 +1,29 @@
+
+<dom-module id="scroll-events">
+  <script>
+    (function () {
+      Polymer({
+        is: 'scroll-events',
+        debounce: 0,
+        threshold: 100,
+        attached: function() {
+          var self = this
+          setInterval(function () {
+            var scroll = window.innerHeight + document.body.scrollTop
+            var height = document.body.scrollHeight
+
+            // console.log(scroll, height)
+            // console.log(self.debounce)
+            // console.log(self.threshold)
+
+            if (height != self.debounce &&
+                scroll >= height - self.threshold) {
+              self.fire('bottom')
+              self.debounce = height
+            }
+          }, 100)
+        }
+      });
+    })();
+  </script>
+</dom-module>

@@ -37,6 +37,12 @@
 <body unresolved class="fullbleed">
   <template is="dom-bind" id="app">
     <ipfs-api id="ipfs"></ipfs-api>
+    <scroll-events on-bottom="onBottom"></scroll-events>
+    <starlog-cache
+        on-icon="setIcon"
+        id="cache"
+        items="{{items}}">
+    </starlog-cache>
     <div class="layout vertical">
       <iron-pages attr-for-selected="data-route"
                   class="fit offset"
@@ -48,10 +54,11 @@
                               on-click="onCompose">
                 <iron-icon icon="add"></iron-icon>New post
               </paper-material>
-              <feed-view id="feed"
-                         on-view="viewPost"
-                         status="{{status}}"
-                         editable="true">
+              <feed-view
+                  on-view="viewPost"
+                  items="{{items}}"
+                  status="{{status}}"
+                  editable="true">
               </feed-view>
             </div>
             <paper-material main class="homescreen layout vertical">
@@ -85,15 +92,12 @@
         </section>
 
         <section data-route="starlog">
-          <paper-drawer-panel
-              force-narrow="true">
-            <starlog-view
-                id="starlog"
-                path="{{starlogpath}}"
-                seqnr="{{seqnr}}"
-                main>
-            </starlog-view>
-          </paper-drawer-panel>
+          <starlog-view
+              items="{{items}}"
+              id="starlog"
+              path="{{starlogpath}}"
+              seqnr="{{seqnr}}">
+          </starlog-view>
         </section>
 
         <section data-route="init">
@@ -124,10 +128,8 @@ var app = document.querySelector('#app')
 
 app.post = function (env) {
 
-  console.log(app.$)
-
   app.$.drawer.openDrawer()
-  app.$.feed.append(env.detail)
+  app.$.cache.append(env.detail)
   document.querySelector('#editor').clear()
 
   app.compose = false
@@ -139,6 +141,7 @@ app.followPermalink = function () {
 
 app.onCompose = function () {
   app.compose = true
+  app.$.drawer.closeDrawer()
 }
 
 app.properties = {
@@ -158,7 +161,7 @@ app.updateIcon = function (ev) {
 }
 
 app.viewPost = function (ev) {
-  page('/starlog/' + ev.detail.path + '/' + ev.detail.seqnr)
+  page('/starlog/' + app.id + '/' + ev.detail)
 }
 
 app.pageChanged = function () {
@@ -167,6 +170,12 @@ app.pageChanged = function () {
     page('/home')
   } else if (this.page === 1) {
     page('/reading')
+  }
+}
+
+app.onBottom = function () {
+  if (app.route == 'starlog') {
+    app.$.cache.loadMessages(5)
   }
 }
 
@@ -196,7 +205,7 @@ app.initialize = function () {
         } catch (e) {}
 
         if (type === 'starlog-feed') {
-          app.$.feed.load(app.id)
+          app.$.cache.load(app.id)
         } else {
           page('/init')
         }

@@ -48,11 +48,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
 
   <template>
-    <starlog-cache
-        on-icon="setIcon"
-        id="cache"
-        items="{{items}}">
-    </starlog-cache>
     <div class="feed">
       <template is="dom-repeat"
                 items="{{items}}"
@@ -68,34 +63,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </paper-material>
       </template>
     </div>
-    <template is="dom-if" if="{{!exausted}}">
-      <div class="box layout end-justified">
-        <button on-click="loadMessages">load more</button>
-      </div>
-    </template>
   </template>
 
   <script>
     Polymer({
       is: 'starlog-view',
       properties: {
-        name: String
+        name: String,
+        items: { type: Array,
+                 value: [] }
       },
-      observers: [
-        'load(path, seqnr)'
-      ],
       setIcon: function (icon) {
         this.icon = '/ipfs/' + icon.detail
       },
       ready: function() {
         var self = this
-        self.items = []
-        self.path = this.getAttribute('path')
       },
-      load: function (path, seqnr) {
-        this.path = path
-        this.$.cache.load(path, seqnr, seqnr != 'latest' ? 1 : undefined)
-      }
     });
   </script>
 </dom-module>

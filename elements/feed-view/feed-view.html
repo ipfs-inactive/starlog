@@ -27,6 +27,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       margin: 8px;
       clear: right;
     }
+    .links {
+      width: 100%;
+    }
+    .links iron-icon {
+      margin: 4px;
+    }
     .title {
       margin: 8px;
     }
@@ -63,26 +69,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-material class="entry layout horizontal">
           <img class="icon" src="{{icon}}"/>
           <div class="flex">
-            <template is="dom-if" if="{{!editable}}">
-              <div class="name">{{name}}</div>
-            </template>
+            <div class="name">{{name}}</div>
             <div class="title">{{item.title}}</div>
-            <template is="dom-if" if="{{editable}}">
-              <iron-icon icon="create"></iron-icon>
-              <iron-icon icon="link"
-                         seqnr="{{item.seqnr}}"
-                         on-click="viewPost">
-              </iron-icon>
+            <template is="dom-if"
+                      if="{{editable}}">
+              <div class="links layout horizontal end-justified">
+                <iron-icon icon="link"
+                           seqnr="{{item.seqnr}}"
+                           on-click="viewPost">
+                </iron-icon>
+                <iron-icon icon="create"
+                           seqnr="{{item.seqnr}}"
+                           on-click="editPost">
+                </iron-icon>
+              </div>
             </template>
           </div>
         </paper-material>
       </template>
     </div>
-    <template is="dom-if" if="{{!exausted}}">
-      <div class="box layout end-justified">
-        <button on-click="loadMessages">load more</button>
-      </div>
-    </template>
   </template>
 
   <script>
@@ -104,15 +109,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       gotIcon: function (ev) {
         this.icon = '/ipfs/' + ev.detail
       },
-      append: function (item) {
-        this.$.cache.append(item)
-      },
       setIcon: function (item, done) {
         this.$.cache.setIcon(item, done)
       },
       viewPost: function (e) {
-        this.fire('view', {path: this.path,
-                           seqnr: e.model.item.seqnr})
+        this.fire('view', e.model.item.seqnr)
+      },
+      editPost: function (e) {
+        this.fire('edit', e.model.item.seqnr)
       }
     });
   </script>

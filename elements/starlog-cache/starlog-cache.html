@@ -1,12 +1,3 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 
 <link rel="import" href="../ipfs-api/ipfs-api.html">
 <link rel="import" href="../aolog-api/aolog-api.html">
@@ -22,13 +13,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     Polymer({
       is: 'starlog-cache',
+      properties: {
+        items: { type: Array,
+                 notify: true,
+                 value: []}
+      },
       ready: function() {
         var self = this
-
-        self.items = []
-
         var ipfscomponent = self.$$('ipfs-api')
-
         self.path = this.getAttribute('path')
         self.ipfs = ipfscomponent.api
         self.aolog = self.$$('aolog-api').api
@@ -36,9 +28,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       load: function (path, offset, nr) {
         var self = this
+        if (!nr) nr = 5
         self.path = path
 
-        // clear all
         self.splice('items', 0, self.items.length)
 
         self.ipfs.object.get('/ipns/' + path, function (err, res) {
@@ -62,17 +54,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
             if (err) throw err
             self.log = res
-            self.loadMessages(offset, nr)
+            self.offset = offset || self.log.count -1
+            self.loadMessages(nr)
           })
         })
       },
-      loadMessages: function (offset, num) {
-        num = num || 30
+      loadMessages: function (num) {
         var self = this
-        if (self.exausted) return
+        num = num || 5
 
-        if (offset == 'latest') offset = 0
-        var iter = self.log.iterator({reverse: true, offset: offset})
+        if (!this.log) return
+
+        console.log('loadmsg', num, self.offset)
+
+        var iter = self.log.iterator({reverse: true, offset: self.offset})
 
         iter.take(num, function (err, res) {
           if (err) throw err
@@ -82,10 +77,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             res[i].seqnr = self.log.count - self.items.length - 1
             self.push('items', res[i])
           }
-
-          if (self.items.length === self.log.count) {
-            self.exausted = true
-          }
+          // self.splice('items', 0, 0, 0, res)
+          console.log(self.items)
+          self.offset -= num
         })
       },
       append: function (item) {
@@ -94,6 +88,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         self.log.append(item, function (err, newlog) {
           if (err) throw err
           self.log = newlog
+
+          console.log('.....')
+          console.log(newlog)
+          console.log(self.persist)
+
           self.persist(function (err) {
             // annotate with seqnr
             item.seqnr = newlog.count - 1
