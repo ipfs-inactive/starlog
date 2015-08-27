@@ -1,16 +1,13 @@
-
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
+<script src="../../node_modules/aolog/aolog.js"></script>
+<script src="../../node_modules/ipfs-api/ipfsapi.min.js"></script>
+<script src="../../node_modules/browser-buffer/dist/buffer.js"></script>
 
 <dom-module id="starlog-cache">
-  <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
-  </template>
-
   <script>
+    var Buffer = Buffer.Buffer
+    var ipfs = ipfsAPI()
+    var aolog = AOlog(ipfs, 16)
+
     Polymer({
       is: 'starlog-cache',
       properties: {
@@ -20,11 +17,6 @@
       },
       ready: function() {
         var self = this
-        var ipfscomponent = self.$$('ipfs-api')
-        self.path = this.getAttribute('path')
-        self.ipfs = ipfscomponent.api
-        self.aolog = self.$$('aolog-api').api
-        self.Buffer = self.$$('browser-buffer').Buffer
       },
       load: function (path, offset, nr) {
         var self = this
@@ -33,7 +25,7 @@
 
         self.splice('items', 0, self.items.length)
 
-        self.ipfs.object.get('/ipns/' + path, function (err, res) {
+        ipfs.object.get('/ipns/' + path, function (err, res) {
           if (err) throw err
 
           self.linkmap = {}
@@ -51,7 +43,7 @@
 
           self.data = JSON.parse(res.Data)
 
-          self.aolog.restore(self.linkmap.log.Hash, function (err, res) {
+          aolog.restore(self.linkmap.log.Hash, function (err, res) {
             if (err) throw err
             self.log = res
             self.offset = offset || self.log.count -1
@@ -102,7 +94,7 @@
       },
       setIcon: function (hash, done) {
         var self = this
-        self.ipfs.object.stat(hash, function (err, res) {
+        ipfs.object.stat(hash, function (err, res) {
           if (err) throw err
 
           self.linkmap.icon = {Name: 'icon',
@@ -123,14 +115,14 @@
           self.linkmap.log.Hash = persisted.Hash
           self.linkmap.log.Size = persisted.Size
 
-          var obj = new self.Buffer(JSON.stringify({
+          var obj = new Buffer(JSON.stringify({
             Data: JSON.stringify(self.data),
             Links: _.map(self.linkmap, function (x) { return x })
           }))
 
-          self.ipfs.object.put(obj, 'json', function (err, res) {
+          ipfs.object.put(obj, 'json', function (err, res) {
             if (err) throw err
-            self.ipfs.name.publish(res.Hash, function (err, res) {
+            ipfs.name.publish(res.Hash, function (err, res) {
               if (err) throw err
               self.status = ''
             })

@@ -8,10 +8,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
-<link rel="import" href="../../bower_components/basic-autosize-textarea/basic-autosize-textarea.html">
+<script src="../../node_modules/aolog/aolog.js"></script>
+<script src="../../node_modules/ipfs-api/ipfsapi.min.js"></script>
+<script src="../../node_modules/browser-buffer/dist/buffer.js"></script>
 
 <dom-module id="initialize-feed">
   <style>
@@ -53,9 +52,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   </style>
   <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
     <div>
       <iron-pages attr-for-selected="state" selected="{{state}}">
         <section state="default">
@@ -82,54 +78,53 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   <script>
-    (function () {
-      Polymer({
-        is: 'initialize-feed',
-        create: function () {
-          var self = this
-          if (self.$.name.value) {
-            var empty = this.aolog.empty()
+    var ipfs = ipfsAPI()
+    var aolog = AOlog(ipfs, 16)
+    var Buffer = Buffer.Buffer
 
-            empty.persist(function (err, logres) {
+    Polymer({
+      is: 'initialize-feed',
+      create: function () {
+        var self = this
+        if (self.$.name.value) {
+          var empty = this.aolog.empty()
+
+          empty.persist(function (err, logres) {
+            if (err) throw err
+
+            var obj = new Buffer(JSON.stringify({
+              Data: JSON.stringify({
+                type: 'starlog-feed',
+                name: self.$.name.value
+              }),
+              // Links: [{
+              //   Name: 'log',
+              //   Hash: logres.Hash,
+              //   Size: logres.Size
+              // }]}))
+
+              Links: [{
+                Name: 'log',
+                Hash: 'QmWKcYoMMhbMpfF4W1NHo37yUtXpnptWbsY3CMTnHPxsod',
+                Size: 403188
+              }]}))
+
+            self.ipfs.object.put(obj, 'json', function (err, res) {
               if (err) throw err
-
-              var obj = new self.Buffer(JSON.stringify({
-                Data: JSON.stringify({
-                  type: 'starlog-feed',
-                  name: self.$.name.value
-                }),
-                // Links: [{
-                //   Name: 'log',
-                //   Hash: logres.Hash,
-                //   Size: logres.Size
-                // }]}))
-
-                Links: [{
-                  Name: 'log',
-                  Hash: 'QmPpGqe9m4nq5hebBu9yfX5t7niwuycfjTQX6Y1YhKJ97C',
-                  Size: 1806394
-                }]}))
-
-              self.ipfs.object.put(obj, 'json', function (err, res) {
+              self.state = 'publishing'
+              self.ipfs.name.publish(res.Hash, function (err, res) {
                 if (err) throw err
-                self.state = 'publishing'
-                self.ipfs.name.publish(res.Hash, function (err, res) {
-                  if (err) throw err
-                  self.fire('initialized')
-                })
+                self.fire('initialized')
               })
             })
-          }
-        },
-        ready: function() {
-          var self = this
-          self.state = 'default'
-          self.ipfs = self.$$('ipfs-api').api
-          self.aolog = self.$$('aolog-api').api
-          self.Buffer = self.$$('browser-buffer').Buffer
+          })
         }
-      });
-    })();
+      },
+      ready: function() {
+        var self = this
+        self.state = 'default'
+      }
+    })
   </script>
 
 </dom-module>

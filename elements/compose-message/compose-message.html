@@ -1,11 +1,7 @@
-
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
 <link rel="import" href="../../bower_components/basic-autosize-textarea/basic-autosize-textarea.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/mark-down/mark-down.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
 
 <dom-module id="compose-message">
   <style>
@@ -43,10 +39,6 @@
     }
   </style>
   <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
-
     <paper-material>
       <paper-tabs selected="{{section}}">
         <paper-tab>Compose</paper-tab>
@@ -85,13 +77,7 @@
         ready: function() {
           var self = this
           var feedhash = this.getAttribute('hash')
-          self.Buffer = this.$$('browser-buffer').Buffer
           self.section = 0
-
-          var ipfscomponent = self.$$('ipfs-api')
-
-          self.ipfs = ipfscomponent.api
-          self.aolog = self.$$('aolog-api').api
         },
         preview: function () {
           console.log(this.$.preview)

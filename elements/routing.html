@@ -26,14 +26,14 @@
       app.route = 'reading';
     });
 
-    page('/starlog/:path', function (e) {
+    page('/starlog/:proto/:path', function (e) {
       app.route = 'starlog';
       app.starlogpath = e.params.path
     });
 
-    page('/starlog/:path/:seqnr', function (e) {
+    page('/starlog/:proto/:path/:seqnr', function (e) {
       app.route = 'starlog';
-      app.starlogpath = e.params.path
+      app.starlogpath = e.params.proto + '/' + e.params.path
       app.seqnr = e.params.seqnr
     });
 

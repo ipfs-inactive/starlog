@@ -5,8 +5,9 @@
   "main": "src/index.js",
   "dependencies": {
     "aolog": "^2.0.2",
+    "browser-buffer": "0.0.1",
     "drag-drop": "^2.3.0",
-    "ipfs-api": "^2.1.5"
+    "ipfs-api": "^2.3.0"
   },
   "devDependencies": {
     "express": "^4.13.3",

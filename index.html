@@ -17,6 +17,8 @@
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <!-- endbuild -->
 
+  <script src="node_modules/ipfs-api/ipfsapi.min.js"></script>
+
   <!-- will be replaced with elements/elements.vulcanized.html -->
   <link rel="import" href="elements/elements.html">
   <!-- endreplace-->
@@ -36,7 +38,6 @@
 
 <body unresolved class="fullbleed">
   <template is="dom-bind" id="app">
-    <ipfs-api id="ipfs"></ipfs-api>
     <scroll-events on-bottom="onBottom"></scroll-events>
     <starlog-cache
         on-icon="setIcon"
@@ -66,7 +67,10 @@
                 <h2>{{name}}</h2>
                 <template is="dom-if" if="{{!compose}}">
                   <p>
-                    <a href="{{permalink}}">Link to this log</a>
+                    <a href="{{ipfslink}}">IPFS Link to this log</a>
+                  </p>
+                  <p>
+                    <a href="{{ipnslink}}">IPNS Link to this log (unstable)</a>
                   </p>
                   <p>
                     Select icon
@@ -180,22 +184,23 @@ app.onBottom = function () {
 }
 
 app.initialize = function () {
-  var ipfs = document.querySelector('ipfs-api').api
+  var self = this
+  var ipfs = ipfsAPI()
   this.page = 0
   app.compose = false
 
   ipfs.id(function (err, res) {
     if (err) {
       app.readonly = true
-      return
+    } else {
+      app.readonly = false
+      app.starlogpath = res.ID
+      app.id = res.ID
+      app.ipnslink = '/starlog/ipns/' + app.id + '/latest'
     }
-    app.readonly = false
 
-    app.id = res.ID
-    app.permalink = '/starlog/' + app.id + '/latest'
-
-    if (app.id) {
-      ipfs.object.get('/ipns/' + app.id, function (err, res) {
+    if (app.starlogpath) {
+      ipfs.object.get('/ipns/' + app.starlogpath, function (err, res) {
         if (err) throw err
 
         var type
@@ -210,8 +215,6 @@ app.initialize = function () {
           page('/init')
         }
       })
-    } else {
-      // running on gateway, for example
     }
   })
 }

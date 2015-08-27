@@ -13,6 +13,15 @@ body {
   color: #333;
 }
 
+p { clear: both; }
+
+img {
+  float: left;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  max-width: 500px;
+}
+
 iron-pages {
   /* position: relative; */
   /* top: 60px; */
