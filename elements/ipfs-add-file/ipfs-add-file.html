@@ -1,5 +1,4 @@
-<script src="../../node_modules/ipfs-api/ipfsapi.min.js"></script>
-<script src="../../node_modules/browser-buffer/dist/buffer.js"></script>
+<script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
 <script src="../../node_modules/drag-drop/dragdrop.bundle.js"></script>
 
 <dom-module id="ipfs-add-file">
@@ -25,7 +24,6 @@
   </template>
   <script>
     var ipfs = ipfsAPI()
-    var Buffer = Buffer.Buffer
     Polymer({
       is: 'ipfs-add-file',
       selectFile: function () {
@@ -43,8 +41,8 @@
 
         var reader = new window.FileReader()
         reader.onload = function () {
-          var data = reader.result
-          data = new Buffer(data.substr(data.indexOf(',') + 1), 'base64')
+          var data = reader.result.substr(reader.result.indexOf(',') + 1)
+          data = new ipfs.Buffer(data, 'base64')
           add(data)
         }
         // TODO: use array buffers instead of base64 strings

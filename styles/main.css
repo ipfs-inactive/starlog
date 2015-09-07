@@ -19,7 +19,7 @@ img {
   float: left;
   margin-right: 8px;
   margin-bottom: 8px;
-  max-width: 500px;
+  max-width: 360px;
 }
 
 iron-pages {
@@ -39,10 +39,17 @@ html,body {
 paper-toolbar {
   background: #000;
   color: white;
-}
-.toolbar {
-  background: #000;
   height: 60px;
+  width: 100%;
+}
+
+.toolbar {
+  width: 100%;
+}
+
+.textsearch input {
+  position: relative;
+  bottom: 8px;
 }
 
 .homescreen {
@@ -85,8 +92,22 @@ paper-toolbar {
   margin-top: 60px;
 }
 
-.compose {
-  padding: 20px 0 20px 30px;
+.icon {
+  margin-top: 4px;
+  margin-right: 8px;
+  width: 50px;
+  height: 50px;
+  background: #fafafa;
+}
+
+.menu {
+  padding: 20px;
+}
+
+.menutext {
+  margin-left: 4px;
+  position: relative;
+  top: 2px;
 }
 
 paper-spinner {

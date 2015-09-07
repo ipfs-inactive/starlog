@@ -6,46 +6,44 @@
 
     page('/', function () {
       page('/home')
-    });
+    })
 
     page('/home', function () {
-      app.route = 'home';
-    });
+      app.route = '/home'
+      app.initialize()
+    })
 
     // workaround
     page('/ipfs/:a', function () {
       page('/home')
-    });
+    })
     // end workaround
 
     page('/init', function () {
-      app.route = 'init';
-    });
+      app.route = '/init'
+    })
 
     page('/reading', function () {
-      app.route = 'reading';
-    });
+      app.route = '/reading'
+    })
 
-    page('/starlog/:proto/:path', function (e) {
-      app.route = 'starlog';
-      app.starlogpath = e.params.path
-    });
+    page('/starlog/:loghash', function (e) {
+      app.route = '/starlog/' + e.params.loghash
+      app.loghash = e.params.loghash
+    })
 
-    page('/starlog/:proto/:path/:seqnr', function (e) {
-      app.route = 'starlog';
-      app.starlogpath = e.params.proto + '/' + e.params.path
+    page('/starlog/:loghash/:seqnr', function (e) {
+      app.route = '/starlog/' + e.params.loghash +
+        '/' + e.params.seqnr
+      app.loghash = e.params.loghash
       app.seqnr = e.params.seqnr
-    });
-
-    page('/feed/:path', function (data) {
-      app.route = 'user-info';
-      app.params = data.params;
-    });
+      app.loadLog()
+    })
 
     // add #! before urls
     page({
       hashbang: true
-    });
+    })
 
-  });
+  })
 </script>

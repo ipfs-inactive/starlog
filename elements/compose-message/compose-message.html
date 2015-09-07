@@ -10,6 +10,8 @@
     }
     button {
       border: 0;
+      margin-right: 6px;
+      margin-bottom: 6px;
       border-radius: 4px;
       padding: 4px 10px;
       background: #03a9f4;
@@ -54,17 +56,18 @@
           <basic-autosize-textarea id="body"
                                    value="{{body}}"
                                    placeholder="Body (markdown)"
-                                   minimum-rows="20">
+                                   minimum-rows="14">
           </basic-autosize-textarea>
         </section>
         <section>
           <h1>{{title}}</h1>
           <div id="preview"></div>
-          <div class="layout flex horizontal end-justified">
-            <button on-click="post">post</button>
-          </div>
         </section>
       </iron-pages>
+      <div class="layout flex horizontal end-justified">
+        <button on-click="cancel">cancel</button>
+        <button on-click="post">post</button>
+      </div>
     </paper-material>
   </template>
 
@@ -92,7 +95,10 @@
           this.fire('post', {title: this.title,
                              body: this.body})
           this.clear()
-        }
+        },
+        cancel: function () {
+          this.fire('cancel')
+         }
       });
     })();
   </script>

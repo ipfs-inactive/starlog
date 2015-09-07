@@ -29,6 +29,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     .title {
       margin: 8px;
     }
+    iron-icon {
+      margin: 16px;
+    }
     .icon {
       margin: 4px;
       width: 50px;
@@ -56,9 +59,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         seqnr="{{item.seqnr}}">
           <img class="icon" src="{{icon}}"/>
           <div class="flex">
-            <h1>{{item.title}}</h1>
+            <div class="layout horizontal justified">
+              <h1>{{item.element.title}}</h1>
+              <iron-icon icon="link"
+                         index="{{item.index}}"
+                         on-click="viewPost">
+              </iron-icon>
+            </div>
             <div class="name">{{data.name}}</div>
-            <mark-down text="{{item.body}}"></mark-down>
+            <template is="dom-if" if="{{!searchMode}}">
+              <mark-down text="{{item.element.body}}"></mark-down>
+            </template>
+            <template is="dom-if" if="{{!searchMode}}">
+              <h1>{{item.element.body}}"><h1>
+            </template>
+            <template is="dom-if" if="{{searchMode}}">
+              <p>{{hilight(item.element.body)}}"><p>
+            </template>
           </div>
         </paper-material>
       </template>
@@ -71,14 +88,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       properties: {
         name: String,
         items: { type: Array,
-                 value: [] }
+                 value: [] },
+        searchMode: { type: String,
+                      value: "" }
       },
       setIcon: function (icon) {
         this.icon = '/ipfs/' + icon.detail
       },
-      ready: function() {
-        var self = this
+      hilight: function (a) {
+        var reg = new RegExp(this.searchMode, "i")
+        var indicies = []
+        return '... ' +
+          a.substr(a.match(reg).index - 40, 40) +
+          '»' +
+          a.substr(a.match(reg).index, this.searchMode.length) +
+          '«' +
+          a.substr(a.match(reg).index + this.searchMode.length, 40) +
+          ' ...'
       },
+      ready: function () {
+      },
+      viewPost: function (e) {
+        this.fire('view', e.model.item.index)
+        this.searchMode = ""
+      },
+      searchView: function (text) {
+        this.searchMode = text
+      }
     });
   </script>
 </dom-module>

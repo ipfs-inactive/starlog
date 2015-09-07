@@ -13,10 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <dom-module id="feed-view">
   <style>
-    :host {
-      display: block;
-    }
-    .entry {
+    paper-material {
       min-height: 50px;
       background: white;
       margin: 4px;
@@ -35,12 +32,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     .title {
       margin: 8px;
-    }
-    .icon {
-      margin: 4px;
-      width: 50px;
-      height: 50px;
-      background: #fafafa;
     }
     .feed {
       overflow-y: auto;
@@ -66,22 +57,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <template is="dom-repeat"
                 items="{{items}}"
                 id="posts">
-        <paper-material class="entry layout horizontal">
-          <img class="icon" src="{{icon}}"/>
+        <paper-material>
           <div class="flex">
-            <div class="name">{{name}}</div>
-            <div class="title">{{item.title}}</div>
+            <span>#</span>
+            <span class="seqnr">{{item.index}}</span>
+            <span class="title">{{item.element.title}}</span>
             <template is="dom-if"
                       if="{{editable}}">
               <div class="links layout horizontal end-justified">
                 <iron-icon icon="link"
-                           seqnr="{{item.seqnr}}"
+                           index="{{item.index}}"
                            on-click="viewPost">
                 </iron-icon>
-                <iron-icon icon="create"
-                           seqnr="{{item.seqnr}}"
-                           on-click="editPost">
-                </iron-icon>
+                <!-- <iron-icon icon="create" -->
+                <!--            index="{{item.index}}" -->
+                <!--            on-click="editPost"> -->
+                <!-- </iron-icon> -->
               </div>
             </template>
           </div>
@@ -113,10 +104,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.cache.setIcon(item, done)
       },
       viewPost: function (e) {
-        this.fire('view', e.model.item.seqnr)
+        this.fire('view', e.model.item.index)
       },
       editPost: function (e) {
-        this.fire('edit', e.model.item.seqnr)
+        this.fire('edit', e.model.item.index)
       }
     });
   </script>
