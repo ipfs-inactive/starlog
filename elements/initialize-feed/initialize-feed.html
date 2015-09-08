@@ -84,17 +84,17 @@
                 feed: id,
                 name: self.$.name.value
               }),
-              Links: [{
-                Name: 'log',
-                Hash: logres.Hash,
-                Size: logres.Size
-              }]}))
-
-              // Links: [{ // brewster
+              // Links: [{
               //   Name: 'log',
-              //   Hash: 'QmQoSGNifuzm9fZ3vUFHHhrpn1fKxcKxonRit9vXVN7iJN',
-              //   Size: 432231
+              //   Hash: logres.Hash,
+              //   Size: logres.Size
               // }]}))
+
+              Links: [{ // brewster
+                Name: 'log',
+                Hash: 'QmQoSGNifuzm9fZ3vUFHHhrpn1fKxcKxonRit9vXVN7iJN',
+                Size: 432231
+              }]}))
 
             ipfs.object.put(obj, 'json', function (err, res) {
               if (err) throw err

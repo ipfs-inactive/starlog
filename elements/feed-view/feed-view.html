@@ -1,15 +1,6 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
-<link rel="import" href="../starlog-cache/starlog-cache.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<script src="../../node_modules/aolog/dist/aolog.js"></script>
+<script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
 
 <dom-module id="feed-view">
   <style>
@@ -47,12 +38,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <template>
     <h1>{{status}}</h1>
-    <starlog-cache
-        id="cache"
-        on-icon="gotIcon"
-        status="{{status}}"
-        items="{{items}}">
-    </starlog-cache>
     <div class="feed">
       <template is="dom-repeat"
                 items="{{items}}"
@@ -85,7 +70,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'feed-view',
       properties: {
-        name: String
+        items: { type: Array,
+                 value: [] },
+        name: { type: String,
+                notify: true },
+        icon: { type: String,
+                notify: true }
       },
       ready: function() {
         var self = this
@@ -94,21 +84,102 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       load: function (path) {
         var self = this
+        ipfs = ipfsAPI()
+
         self.path = path
-        self.$.cache.load(path)
+
+        ipfs.object.get(path, function (err, res) {
+          if (err) throw err
+
+          try {
+            self.data = JSON.parse(res.Data)
+          } catch (e) {}
+
+          self.linkmap = {}
+          for (var i = 0 ; i < res.Links.length ; i++) {
+            self.linkmap[res.Links[i].Name] = {
+              Name: res.Links[i].Name,
+              Size: res.Links[i].Size,
+              Hash: res.Links[i].Hash
+            }
+          }
+
+          if (self.linkmap.icon) {
+            self.icon = '/ipfs/' + self.linkmap.icon.Hash
+          }
+
+          if (self.data.name) {
+            self.name = self.data.name
+          }
+        })
+
+        aolog.restore(path + '/log', function (err, res) {
+          if (err) throw err
+          self.log = res
+
+          var iter = self.log.iterator({ reverse: true })
+
+          iter.take(10, function (err, res) {
+            if (err) throw err
+            self.items = res
+          })
+        })
       },
-      gotIcon: function (ev) {
-        this.icon = '/ipfs/' + ev.detail
+      setIcon: function (hash) {
+        var self = this
+
+        ipfs.object.stat(hash, function (err, res) {
+          if (err) throw err
+          self.linkmap.icon = { Name: 'icon',
+                                Size: res.CumulativeSize,
+                                Hash: hash }
+          self.persist()
+        })
       },
-      setIcon: function (item, done) {
-        this.$.cache.setIcon(item, done)
+      persist: function (done) {
+        var self = this
+
+        self.log.persist(function (err, persisted) {
+          if (err) throw err
+
+          self.linkmap.log.Hash = persisted.Hash
+          self.linkmap.log.Size = persisted.Size
+
+          var obj = new ipfs.Buffer(JSON.stringify({
+            Data: JSON.stringify(self.data),
+            Links: _.map(self.linkmap, function (x) { return x })
+          }))
+
+          ipfs.object.put(obj, 'json', function (err, res) {
+            if (err) throw err
+
+            self.fire('update', res.Hash)
+
+            ipfs.name.publish(res.Hash, function (err) {
+              if (err) throw err
+              console.log('published')
+            })
+          })
+        })
+      },
+      append: function (item) {
+        var self = this
+
+        self.log.append(item, function (err, newlog) {
+          if (err) throw err
+          self.log = newlog
+          self.persist(function (err) {
+            if (err) throw err
+          })
+        })
       },
       viewPost: function (e) {
-        this.fire('view', e.model.item.index)
+        this.fire('view', { log: this.path,
+                            seqnr: e.model.item.index })
       },
       editPost: function (e) {
         this.fire('edit', e.model.item.index)
       }
-    });
+    })
   </script>
 </dom-module>

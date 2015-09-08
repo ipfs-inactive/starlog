@@ -66,15 +66,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                          on-click="viewPost">
               </iron-icon>
             </div>
-            <div class="name">{{data.name}}</div>
             <template is="dom-if" if="{{!searchMode}}">
               <mark-down text="{{item.element.body}}"></mark-down>
             </template>
-            <template is="dom-if" if="{{!searchMode}}">
-              <h1>{{item.element.body}}"><h1>
-            </template>
             <template is="dom-if" if="{{searchMode}}">
-              <p>{{hilight(item.element.body)}}"><p>
+              <p>{{hilight(item.element.body)}}</p>
             </template>
           </div>
         </paper-material>
@@ -89,8 +85,86 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         name: String,
         items: { type: Array,
                  value: [] },
-        searchMode: { type: String,
-                      value: "" }
+        searchMode: { type: Boolean,
+                      value: false },
+        searchFor: { type: String,
+                     value: "" }
+      },
+      load: function (path, seqnr) {
+        var self = this
+        ipfs = ipfsAPI()
+
+        self.path = path
+
+        ipfs.object.get(path, function (err, res) {
+          if (err) throw err
+
+          try {
+            self.data = JSON.parse(res.Data)
+          } catch (e) {}
+
+          self.linkmap = {}
+          for (var i = 0 ; i < res.Links.length ; i++) {
+            self.linkmap[res.Links[i].Name] = {
+              Name: res.Links[i].Name,
+              Size: res.Links[i].Size,
+              Hash: res.Links[i].Hash
+            }
+          }
+
+          if (self.linkmap.icon) {
+            self.icon = '/ipfs/' + self.linkmap.icon.Hash
+          }
+
+          if (self.data.name) {
+            self.name = self.data.name
+          }
+        })
+
+        aolog.restore(path + '/log', function (err, res) {
+          if (err) throw err
+          self.log = res
+
+          var iter = self.log.iterator({ reverse: true,
+                                         offset: seqnr })
+
+          var num = seqnr ? 1 : 10
+
+          iter.take(num, function (err, res) {
+            if (err) throw err
+            self.items = res
+          })
+        })
+      },
+      loadMessages: function (num) {
+        var self = this
+        num = num || 5
+
+        if (!this.log) return
+
+        var iteropts = {
+          reverse: true,
+          offset: self.offset,
+          filter: this.filter
+        }
+
+        console.log(iteropts)
+
+        var iter = self.log.iterator(iteropts)
+
+        iter.take(num, function (err, res) {
+          if (err) throw err
+          if (res.length > num) return self.exausted = true
+
+          console.log(res)
+
+          for (var i = 0 ; i < res.length ; i++) {
+            self.push('items', res[i])
+          }
+          if (res.length) {
+            self.offset = res[res.length - 1].index - 1
+          }
+        })
       },
       setIcon: function (icon) {
         this.icon = '/ipfs/' + icon.detail
@@ -109,11 +183,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ready: function () {
       },
       viewPost: function (e) {
-        this.fire('view', e.model.item.index)
+        this.fire('view', { log: this.path,
+                            seqnr: e.model.item.index })
         this.searchMode = ""
       },
-      searchView: function (text) {
-        this.searchMode = text
+      search: function (filter) {
+        this.filter = filter || {}
+        this.load(this.path)
       }
     });
   </script>

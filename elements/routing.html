@@ -1,49 +1,32 @@
 <script src="../bower_components/page/page.js"></script>
+
 <script>
   window.addEventListener('WebComponentsReady', function() {
 
     var app = document.querySelector('#app')
 
     page('/', function () {
-      page('/home')
+      page.redirect('/home')
     })
 
-    page('/home', function () {
-      app.route = '/home'
-      app.initialize()
-    })
+    page('/home', app.home)
 
     // workaround
     page('/ipfs/:a', function () {
-      page('/home')
+      page.redirect('/home')
     })
     // end workaround
 
-    page('/init', function () {
-      app.route = '/init'
-    })
-
-    page('/reading', function () {
-      app.route = '/reading'
-    })
+    page('/init', app.init)
 
     page('/starlog/:loghash', function (e) {
-      app.route = '/starlog/' + e.params.loghash
-      app.loghash = e.params.loghash
+      page.redirect('/starlog/' + e.params.loghash + '/latest')
     })
 
     page('/starlog/:loghash/:seqnr', function (e) {
-      app.route = '/starlog/' + e.params.loghash +
-        '/' + e.params.seqnr
-      app.loghash = e.params.loghash
-      app.seqnr = e.params.seqnr
-      app.loadLog()
+      app.starlog(e.params.loghash, e.params.seqnr)
     })
 
-    // add #! before urls
-    page({
-      hashbang: true
-    })
-
+    page({ hashbang: true })
   })
 </script>
