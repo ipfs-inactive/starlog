@@ -8,8 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
-<link rel="import" href="../starlog-cache/starlog-cache.html">
 <link rel="import" href="../../bower_components/mark-down/mark-down.html">
+<link rel="import" href="../starlog-behavior/starlog-behavior.html">
 
 <dom-module id="starlog-view">
   <style>
@@ -81,115 +81,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     Polymer({
       is: 'starlog-view',
+      behaviors: [StarlogBehavior],
       properties: {
-        name: String,
-        items: { type: Array,
-                 value: [] },
         searchMode: { type: Boolean,
-                      value: false },
-        searchFor: { type: String,
-                     value: "" }
+                      value: false }
       },
-      load: function (path, seqnr) {
-        var self = this
-        ipfs = ipfsAPI()
-
-        self.path = path
-
-        ipfs.object.get(path, function (err, res) {
-          if (err) throw err
-
-          try {
-            self.data = JSON.parse(res.Data)
-          } catch (e) {}
-
-          self.linkmap = {}
-          for (var i = 0 ; i < res.Links.length ; i++) {
-            self.linkmap[res.Links[i].Name] = {
-              Name: res.Links[i].Name,
-              Size: res.Links[i].Size,
-              Hash: res.Links[i].Hash
-            }
-          }
-
-          if (self.linkmap.icon) {
-            self.icon = '/ipfs/' + self.linkmap.icon.Hash
-          }
-
-          if (self.data.name) {
-            self.name = self.data.name
-          }
-        })
-
-        aolog.restore(path + '/log', function (err, res) {
-          if (err) throw err
-          self.log = res
-
-          var iter = self.log.iterator({ reverse: true,
-                                         offset: seqnr })
-
-          var num = seqnr ? 1 : 10
-
-          iter.take(num, function (err, res) {
-            if (err) throw err
-            self.items = res
-          })
-        })
-      },
-      loadMessages: function (num) {
-        var self = this
-        num = num || 5
-
-        if (!this.log) return
-
-        var iteropts = {
-          reverse: true,
-          offset: self.offset,
-          filter: this.filter
+      _onLoad: function () {
+        if (!this.offset &&
+            this.filter &&
+            this.filter.body) {
+          this.searchMode = true
+          this.searchFor = this.filter.body
+        } else {
+          this.searchMode = false
         }
-
-        console.log(iteropts)
-
-        var iter = self.log.iterator(iteropts)
-
-        iter.take(num, function (err, res) {
-          if (err) throw err
-          if (res.length > num) return self.exausted = true
-
-          console.log(res)
-
-          for (var i = 0 ; i < res.length ; i++) {
-            self.push('items', res[i])
-          }
-          if (res.length) {
-            self.offset = res[res.length - 1].index - 1
-          }
-        })
-      },
-      setIcon: function (icon) {
-        this.icon = '/ipfs/' + icon.detail
       },
       hilight: function (a) {
-        var reg = new RegExp(this.searchMode, "i")
+        var reg = new RegExp(this.searchFor, "i")
         var indicies = []
         return '... ' +
           a.substr(a.match(reg).index - 40, 40) +
           '»' +
-          a.substr(a.match(reg).index, this.searchMode.length) +
+          a.substr(a.match(reg).index, this.searchFor.length) +
           '«' +
-          a.substr(a.match(reg).index + this.searchMode.length, 40) +
+          a.substr(a.match(reg).index + this.searchFor.length, 40) +
           ' ...'
-      },
-      ready: function () {
       },
       viewPost: function (e) {
         this.fire('view', { log: this.path,
                             seqnr: e.model.item.index })
-        this.searchMode = ""
-      },
-      search: function (filter) {
-        this.filter = filter || {}
-        this.load(this.path)
       }
     });
   </script>

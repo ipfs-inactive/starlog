@@ -57,7 +57,9 @@
               </paper-material>
               <paper-material class="menu">
                 <iron-icon icon="search"></iron-icon>
-                <input value="{{titlesearch}}" on-change="searchChange"></input>
+                <input id="titlesearch"
+                       value="{{titlesearch}}"
+                       on-change="searchChange"></input>
               </paper-material>
               <feed-view
                   on-update="updateHash"
@@ -134,7 +136,10 @@
           <iron-pages attr-for-selected="view"
                       selected="{{view}}">
             <div class="textsearch" view="starlog">
-              <input value="{{textsearch}}" on-change="textsearchChange"></input>
+              <input
+                  value="{{textsearch}}"
+                  id="textsearch"
+                  on-change="textsearchChange"></input>
               <iron-icon icon="search"></iron-icon>
             </div>
           </iron-pages>
@@ -198,12 +203,12 @@ app.updateIcon = function (ev) {
 }
 
 app.viewPost = function (ev) {
-  app.$.starlog.load(ev.detail.log, ev.detail.seqnr, 1)
   page('/starlog/' + ev.detail.log + '/' + ev.detail.seqnr)
 }
 
 app.onBottom = function () {
-  if (app.view == 'starlog') {
+  if (app.view == 'starlog' &&
+      app.seqnr == 'latest') {
     app.$.starlog.loadMessages(5)
   }
 }
@@ -218,13 +223,15 @@ app.gatewayLink = function (hash) {
 }
 
 app.searchChange = function (e) {
-  app.$.myfeed.search(e.target.value ? { title: e.target.value } : {})
-  app.$.myfeed.load()
+  app.$.myfeed.load(app.local,
+                    undefined,
+                    e.target.value ? { title: e.target.value } : {})
 }
 
 app.textsearchChange = function (e) {
-  app.$.starlog.search(e.target.value ? { body: e.target.value } : {})
-  app.$.starlog.load()
+  app.$.starlog.load(app.loghash,
+                     undefined,
+                     e.target.value ? { body: e.target.value } : {})
 }
 
 app.home = function () {
@@ -240,8 +247,11 @@ app.home = function () {
     ipfs.name.resolve(res.ID, function (err, res) {
       if (err) throw err
       var split = res.Path.split('/')
+      var search = app.$.titlesearch.value
       app.local = split[split.length - 1]
-      app.$.myfeed.load(app.local)
+      app.$.myfeed.load(app.local,
+                        undefined,
+                        search ? { title: search } : {})
     })
   })
 }
@@ -252,7 +262,14 @@ app.init = function () {
 
 app.starlog = function (loghash, seqnr) {
   app.view = 'starlog'
-  app.$.starlog.load(loghash, seqnr)
+  app.loghash = loghash
+  app.seqnr = parseInt(seqnr) || undefined
+
+  var search = app.$.textsearch.value
+  app.$.starlog.load(app.loghash,
+                     app.seqnr,
+                     search ? { body: search } : {},
+                     app.seqnr ? 1 : undefined)
 }
 
 window.addEventListener("hashchange", app.routeChanged, false)

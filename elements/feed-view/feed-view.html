@@ -1,6 +1,5 @@
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
-<script src="../../node_modules/aolog/dist/aolog.js"></script>
-<script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
+<link rel="import" href="../starlog-behavior/starlog-behavior.html">
 
 <dom-module id="feed-view">
   <style>
@@ -69,110 +68,7 @@
   <script>
     Polymer({
       is: 'feed-view',
-      properties: {
-        items: { type: Array,
-                 value: [] },
-        name: { type: String,
-                notify: true },
-        icon: { type: String,
-                notify: true }
-      },
-      ready: function() {
-        var self = this
-        self.items = []
-        self.path = this.getAttribute('path')
-      },
-      load: function (path) {
-        var self = this
-        ipfs = ipfsAPI()
-
-        self.path = path
-
-        ipfs.object.get(path, function (err, res) {
-          if (err) throw err
-
-          try {
-            self.data = JSON.parse(res.Data)
-          } catch (e) {}
-
-          self.linkmap = {}
-          for (var i = 0 ; i < res.Links.length ; i++) {
-            self.linkmap[res.Links[i].Name] = {
-              Name: res.Links[i].Name,
-              Size: res.Links[i].Size,
-              Hash: res.Links[i].Hash
-            }
-          }
-
-          if (self.linkmap.icon) {
-            self.icon = '/ipfs/' + self.linkmap.icon.Hash
-          }
-
-          if (self.data.name) {
-            self.name = self.data.name
-          }
-        })
-
-        aolog.restore(path + '/log', function (err, res) {
-          if (err) throw err
-          self.log = res
-
-          var iter = self.log.iterator({ reverse: true })
-
-          iter.take(10, function (err, res) {
-            if (err) throw err
-            self.items = res
-          })
-        })
-      },
-      setIcon: function (hash) {
-        var self = this
-
-        ipfs.object.stat(hash, function (err, res) {
-          if (err) throw err
-          self.linkmap.icon = { Name: 'icon',
-                                Size: res.CumulativeSize,
-                                Hash: hash }
-          self.persist()
-        })
-      },
-      persist: function (done) {
-        var self = this
-
-        self.log.persist(function (err, persisted) {
-          if (err) throw err
-
-          self.linkmap.log.Hash = persisted.Hash
-          self.linkmap.log.Size = persisted.Size
-
-          var obj = new ipfs.Buffer(JSON.stringify({
-            Data: JSON.stringify(self.data),
-            Links: _.map(self.linkmap, function (x) { return x })
-          }))
-
-          ipfs.object.put(obj, 'json', function (err, res) {
-            if (err) throw err
-
-            self.fire('update', res.Hash)
-
-            ipfs.name.publish(res.Hash, function (err) {
-              if (err) throw err
-              console.log('published')
-            })
-          })
-        })
-      },
-      append: function (item) {
-        var self = this
-
-        self.log.append(item, function (err, newlog) {
-          if (err) throw err
-          self.log = newlog
-          self.persist(function (err) {
-            if (err) throw err
-          })
-        })
-      },
+      behaviors: [StarlogBehavior],
       viewPost: function (e) {
         this.fire('view', { log: this.path,
                             seqnr: e.model.item.index })
