@@ -69,7 +69,7 @@ Packs up the app with vulcanize, adds it to ipfs, and opens the resulting hash i
 For this command to avoid 403, the ipfs daemon must be started in unrestricted-api mode:
 
 ```bash
-ipfs daemon --unrestrcited-api
+ipfs daemon --unrestricted-api
 ```
 
 ```npm run gateway```
