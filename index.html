@@ -168,8 +168,7 @@ app.properties = {
 }
 
 app.routeChanged = function () {
-  // this.view = this.route.split('/')[1]
-  // page.redirect('/home')
+  this.view = this.route.split('/')[1]
 }
 
 app.updateHash = function (ev) {
@@ -195,7 +194,7 @@ app.onCompose = function () {
 
 app.feedInitialized = function (ev) {
   app.local = ev.detail
-  page.redirect('/home')
+  page('/home')
 }
 
 app.updateIcon = function (ev) {
@@ -234,26 +233,49 @@ app.textsearchChange = function (e) {
                      e.target.value ? { body: e.target.value } : {})
 }
 
+app.loadMyFeed = function () {
+  app.readonly = false
+  var search = app.$.titlesearch.value
+  app.$.myfeed.load(app.local,
+                    undefined,
+                    search ? { title: search } : {})
+}
+
 app.home = function () {
   app.route = '/home'
   app.view = 'home'
   var ipfs = ipfsAPI()
 
-  ipfs.id(function (err, res) {
-    if (err) return
+  if (app.local) {
+    app.loadMyFeed()
+  } else {
+    ipfs.id(function (err, res) {
+      if (err) return
+      ipfs.name.resolve(res.ID, function (err, res) {
+        if (err) throw err
+        var split = res.Path.split('/')
+        app.local = split[split.length - 1]
 
-    app.readonly = false
+        // check if it's really a starlog feed
+        ipfs.object.get(app.local, function (err, res) {
+          if (err) throw err
 
-    ipfs.name.resolve(res.ID, function (err, res) {
-      if (err) throw err
-      var split = res.Path.split('/')
-      var search = app.$.titlesearch.value
-      app.local = split[split.length - 1]
-      app.$.myfeed.load(app.local,
-                        undefined,
-                        search ? { title: search } : {})
+          var type
+          try {
+            type = JSON.parse(res.Data).type
+          } catch (e) {}
+
+          if (type === 'starlog') {
+            app.loadMyFeed()
+          } else {
+            page('/init')
+          }
+        })
+
+        app.loadMyFeed()
+      })
     })
-  })
+  }
 }
 
 app.init = function () {
@@ -262,6 +284,7 @@ app.init = function () {
 
 app.starlog = function (loghash, seqnr) {
   app.view = 'starlog'
+  app.route = '/starlog'
   app.loghash = loghash
   app.seqnr = parseInt(seqnr) || undefined
 

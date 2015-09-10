@@ -22,7 +22,6 @@
       var self = this
       ipfs = ipfsAPI()
       self.path = path
-      self.items = []
       self.filter = filter
       self.offset = offset
 
@@ -56,6 +55,7 @@
       aolog.restore(path + '/log', function (err, res) {
         if (err) throw err
         self.log = res
+        self.items = []
         self.loadMessages(nr)
       })
     },
