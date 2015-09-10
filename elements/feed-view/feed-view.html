@@ -6,19 +6,14 @@
     paper-material {
       min-height: 50px;
       background: white;
-      margin: 4px;
+      margin: 4px 8px;
       padding: 2px;
+      cursor: pointer;
     }
     .name {
       font-weight: bold;
       margin: 8px;
       clear: right;
-    }
-    .links {
-      width: 100%;
-    }
-    .links iron-icon {
-      margin: 4px;
     }
     .title {
       margin: 8px;
@@ -42,22 +37,12 @@
                 items="{{items}}"
                 id="posts">
         <paper-material>
-          <div class="flex">
+          <div class="flex" on-click="viewPost" index="{{item.index}}">
             <span>#</span>
             <span class="seqnr">{{item.index}}</span>
             <span class="title">{{item.element.title}}</span>
             <template is="dom-if"
                       if="{{editable}}">
-              <div class="links layout horizontal end-justified">
-                <iron-icon icon="link"
-                           index="{{item.index}}"
-                           on-click="viewPost">
-                </iron-icon>
-                <!-- <iron-icon icon="create" -->
-                <!--            index="{{item.index}}" -->
-                <!--            on-click="editPost"> -->
-                <!-- </iron-icon> -->
-              </div>
             </template>
           </div>
         </paper-material>
