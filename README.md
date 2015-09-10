@@ -44,11 +44,11 @@ npm install
 
 ### Run
 
-Make sure your ipfs daemon is running with API_ORIGIN set to '*':
+Make sure your ipfs daemon is running with API_ORIGIN set to '*', and using --unrestricted-api
 
 ```bash
 export API_ORIGIN="*"
-ipfs daemon
+ipfs daemon --unrestricted-api
 ```
 
 Leave that running, and then run the following in a new console window:
@@ -63,10 +63,5 @@ $ npm run serve
 * ```npm run serve``` - Opens the app in your local browser on 8082, redirects `/ipfs` and `/api` calls to your ipfs daemon on port 5001.  
 
 * ```npm run local``` - Packs up the app with vulcanize, adds it to ipfs, and opens the resulting hash in your local api gateway.  
-For this command to avoid 403, the ipfs daemon must be started in unrestricted-api mode:  
-
-  ```bash
-  ipfs daemon --unrestricted-api
-  ```
 
 * ```npm run gateway``` - Packs the app up and runs it from the ipfs.io gateway.
