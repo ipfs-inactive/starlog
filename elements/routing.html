@@ -1,51 +1,32 @@
 <script src="../bower_components/page/page.js"></script>
+
 <script>
   window.addEventListener('WebComponentsReady', function() {
 
     var app = document.querySelector('#app')
 
     page('/', function () {
-      page('/home')
-    });
+      page.redirect('/home')
+    })
 
-    page('/home', function () {
-      app.route = 'home';
-    });
+    page('/home', app.home)
 
     // workaround
     page('/ipfs/:a', function () {
-      page('/home')
-    });
+      page.redirect('/home')
+    })
     // end workaround
 
-    page('/init', function () {
-      app.route = 'init';
-    });
+    page('/init', app.init)
 
-    page('/reading', function () {
-      app.route = 'reading';
-    });
+    page('/starlog/:loghash', function (e) {
+      page.redirect('/starlog/' + e.params.loghash + '/latest')
+    })
 
-    page('/starlog/:path', function (e) {
-      app.route = 'starlog';
-      app.starlogpath = e.params.path
-    });
+    page('/starlog/:loghash/:seqnr', function (e) {
+      app.starlog(e.params.loghash, e.params.seqnr)
+    })
 
-    page('/starlog/:path/:seqnr', function (e) {
-      app.route = 'starlog';
-      app.starlogpath = e.params.path
-      app.seqnr = e.params.seqnr
-    });
-
-    page('/feed/:path', function (data) {
-      app.route = 'user-info';
-      app.params = data.params;
-    });
-
-    // add #! before urls
-    page({
-      hashbang: true
-    });
-
-  });
+    page({ hashbang: true })
+  })
 </script>

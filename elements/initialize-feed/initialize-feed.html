@@ -1,17 +1,5 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
-<link rel="import" href="../../bower_components/basic-autosize-textarea/basic-autosize-textarea.html">
+<script src="../../node_modules/aolog/dist/aolog.js"></script>
+<script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
 
 <dom-module id="initialize-feed">
   <style>
@@ -53,83 +41,74 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   </style>
   <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
-    <div>
-      <iron-pages attr-for-selected="state" selected="{{state}}">
-        <section state="default">
-          <div class="box">
-            <h2>Create new feed</h2>
-            <span class='warning'>
-              (warning, this will overwrite your current ipns entry)
-            </span>
-          </div>
-          <div class="box">
-            <div class="horizontal layout end-justified">
-              <span class='label'>name of your log:</span>
-              <input class="flex" id="name"></input>
-              <button on-click="create">go</button>
-            </div>
-          </div>
-        </section>
-        <section state="publishing">
-          <paper-spinner active></paper-spinner>
-          Publishing feed...
-        </section>
-      </iron-pages>
+    <div class="box">
+      <h2>Create new feed</h2>
+      <span class='warning'>
+        (warning, this will overwrite your current ipns entry)
+      </span>
+    </div>
+    <div class="box">
+      <div class="horizontal layout end-justified">
+        <span class='label'>name of your log:</span>
+        <input class="flex" id="name"></input>
+        <button on-click="create">go</button>
+      </div>
     </div>
   </template>
 
   <script>
-    (function () {
-      Polymer({
-        is: 'initialize-feed',
-        create: function () {
-          var self = this
-          if (self.$.name.value) {
-            var empty = this.aolog.empty()
+    var ipfs = ipfsAPI()
+    var aolog = AOlog(ipfs, 16)
 
-            empty.persist(function (err, logres) {
+    Polymer({
+      is: 'initialize-feed',
+      properties: {
+        status: { type: String,
+                  notify: true,
+                  value: '' }
+      },
+      create: function () {
+        var self = this
+        if (!self.$.name.value) return
+        var empty = aolog.empty()
+
+        ipfs.id(function (err, res) {
+          if (err) throw err
+          var id = res.ID
+          empty.persist(function (err, logres) {
+            if (err) throw err
+
+            var obj = new ipfs.Buffer(JSON.stringify({
+              Data: JSON.stringify({
+                type: 'starlog-feed',
+                feed: id,
+                name: self.$.name.value
+              }),
+              // Links: [{
+              //   Name: 'log',
+              //   Hash: logres.Hash,
+              //   Size: logres.Size
+              // }]}))
+
+              Links: [{ // brewster
+                Name: 'log',
+                Hash: 'QmQoSGNifuzm9fZ3vUFHHhrpn1fKxcKxonRit9vXVN7iJN',
+                Size: 432231
+              }]}))
+
+            ipfs.object.put(obj, 'json', function (err, res) {
               if (err) throw err
+              self.fire('initialized', res.Hash)
 
-              var obj = new self.Buffer(JSON.stringify({
-                Data: JSON.stringify({
-                  type: 'starlog-feed',
-                  name: self.$.name.value
-                }),
-                // Links: [{
-                //   Name: 'log',
-                //   Hash: logres.Hash,
-                //   Size: logres.Size
-                // }]}))
-
-                Links: [{
-                  Name: 'log',
-                  Hash: 'QmPpGqe9m4nq5hebBu9yfX5t7niwuycfjTQX6Y1YhKJ97C',
-                  Size: 1806394
-                }]}))
-
-              self.ipfs.object.put(obj, 'json', function (err, res) {
+              ipfs.name.publish(res.Hash, function (err, res) {
                 if (err) throw err
-                self.state = 'publishing'
-                self.ipfs.name.publish(res.Hash, function (err, res) {
-                  if (err) throw err
-                  self.fire('initialized')
-                })
+                self.status = ''
               })
             })
-          }
-        },
-        ready: function() {
-          var self = this
-          self.state = 'default'
-          self.ipfs = self.$$('ipfs-api').api
-          self.aolog = self.$$('aolog-api').api
-          self.Buffer = self.$$('browser-buffer').Buffer
-        }
-      });
-    })();
+          })
+        })
+      }
+    })
   </script>
 
 </dom-module>

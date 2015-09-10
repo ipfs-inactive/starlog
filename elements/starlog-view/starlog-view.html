@@ -8,8 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
-<link rel="import" href="../starlog-cache/starlog-cache.html">
 <link rel="import" href="../../bower_components/mark-down/mark-down.html">
+<link rel="import" href="../starlog-behavior/starlog-behavior.html">
 
 <dom-module id="starlog-view">
   <style>
@@ -28,6 +28,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     .title {
       margin: 8px;
+    }
+    iron-icon {
+      margin: 16px;
     }
     .icon {
       margin: 4px;
@@ -56,9 +59,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         seqnr="{{item.seqnr}}">
           <img class="icon" src="{{icon}}"/>
           <div class="flex">
-            <h1>{{item.title}}</h1>
-            <div class="name">{{data.name}}</div>
-            <mark-down text="{{item.body}}"></mark-down>
+            <div class="layout horizontal justified">
+              <h1>{{item.element.title}}</h1>
+              <iron-icon icon="link"
+                         index="{{item.index}}"
+                         on-click="viewPost">
+              </iron-icon>
+            </div>
+            <template is="dom-if" if="{{!searchMode}}">
+              <mark-down text="{{item.element.body}}"></mark-down>
+            </template>
+            <template is="dom-if" if="{{searchMode}}">
+              <p>{{hilight(item.element.body)}}</p>
+            </template>
           </div>
         </paper-material>
       </template>
@@ -68,17 +81,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     Polymer({
       is: 'starlog-view',
+      behaviors: [StarlogBehavior],
       properties: {
-        name: String,
-        items: { type: Array,
-                 value: [] }
+        searchMode: { type: Boolean,
+                      value: false }
       },
-      setIcon: function (icon) {
-        this.icon = '/ipfs/' + icon.detail
+      _onLoad: function () {
+        if (!this.offset &&
+            this.filter &&
+            this.filter.body) {
+          this.searchMode = true
+          this.searchFor = this.filter.body
+        } else {
+          this.searchMode = false
+        }
       },
-      ready: function() {
-        var self = this
+      hilight: function (a) {
+        var reg = new RegExp(this.searchFor, "i")
+        var indicies = []
+        return '... ' +
+          a.substr(a.match(reg).index - 40, 40) +
+          '»' +
+          a.substr(a.match(reg).index, this.searchFor.length) +
+          '«' +
+          a.substr(a.match(reg).index + this.searchFor.length, 40) +
+          ' ...'
       },
+      viewPost: function (e) {
+        this.fire('view', { log: this.path,
+                            seqnr: e.model.item.index })
+      }
     });
   </script>
 </dom-module>

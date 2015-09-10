@@ -1,11 +1,7 @@
-
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../aolog-api/aolog-api.html">
 <link rel="import" href="../../bower_components/basic-autosize-textarea/basic-autosize-textarea.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/mark-down/mark-down.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
 
 <dom-module id="compose-message">
   <style>
@@ -14,6 +10,8 @@
     }
     button {
       border: 0;
+      margin-right: 6px;
+      margin-bottom: 6px;
       border-radius: 4px;
       padding: 4px 10px;
       background: #03a9f4;
@@ -43,10 +41,6 @@
     }
   </style>
   <template>
-    <ipfs-api></ipfs-api>
-    <aolog-api></aolog-api>
-    <browser-buffer></browser-buffer>
-
     <paper-material>
       <paper-tabs selected="{{section}}">
         <paper-tab>Compose</paper-tab>
@@ -62,17 +56,18 @@
           <basic-autosize-textarea id="body"
                                    value="{{body}}"
                                    placeholder="Body (markdown)"
-                                   minimum-rows="20">
+                                   minimum-rows="14">
           </basic-autosize-textarea>
         </section>
         <section>
           <h1>{{title}}</h1>
           <div id="preview"></div>
-          <div class="layout flex horizontal end-justified">
-            <button on-click="post">post</button>
-          </div>
         </section>
       </iron-pages>
+      <div class="layout flex horizontal end-justified">
+        <button on-click="cancel">cancel</button>
+        <button on-click="post">post</button>
+      </div>
     </paper-material>
   </template>
 
@@ -85,13 +80,7 @@
         ready: function() {
           var self = this
           var feedhash = this.getAttribute('hash')
-          self.Buffer = this.$$('browser-buffer').Buffer
           self.section = 0
-
-          var ipfscomponent = self.$$('ipfs-api')
-
-          self.ipfs = ipfscomponent.api
-          self.aolog = self.$$('aolog-api').api
         },
         preview: function () {
           console.log(this.$.preview)
@@ -106,7 +95,10 @@
           this.fire('post', {title: this.title,
                              body: this.body})
           this.clear()
-        }
+        },
+        cancel: function () {
+          this.fire('cancel')
+         }
       });
     })();
   </script>

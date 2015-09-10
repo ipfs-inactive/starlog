@@ -4,9 +4,11 @@
   "description": "",
   "main": "src/index.js",
   "dependencies": {
-    "aolog": "^2.0.2",
+    "aolog": "^3.2.1",
+    "buffer": "^3.4.3",
     "drag-drop": "^2.3.0",
-    "ipfs-api": "^2.1.5"
+    "ipfs-api": "^2.3.2",
+    "vinyl-fs-browser": "^0.1.0"
   },
   "devDependencies": {
     "express": "^4.13.3",
@@ -18,8 +20,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "node serve.js",
-    "local": "node_modules/.bin/open-url localhost:5001/ipfs/$(./build.sh)",
-    "gateway": "node_modules/.bin/open-url gateway.ipfs.io/ipfs/$(./build.sh)"
+    "local": "./hack.sh ; node_modules/.bin/open-url localhost:5001/ipfs/$(./build.sh)",
+    "gateway": "./hack.sh ; node_modules/.bin/open-url gateway.ipfs.io/ipfs/$(./build.sh)"
   },
   "repository": {
     "type": "git",

@@ -1,22 +1,9 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
-<link rel="import" href="../starlog-cache/starlog-cache.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../starlog-behavior/starlog-behavior.html">
 
 <dom-module id="feed-view">
   <style>
-    :host {
-      display: block;
-    }
-    .entry {
+    paper-material {
       min-height: 50px;
       background: white;
       margin: 4px;
@@ -36,12 +23,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     .title {
       margin: 8px;
     }
-    .icon {
-      margin: 4px;
-      width: 50px;
-      height: 50px;
-      background: #fafafa;
-    }
     .feed {
       overflow-y: auto;
     }
@@ -56,32 +37,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <template>
     <h1>{{status}}</h1>
-    <starlog-cache
-        id="cache"
-        on-icon="gotIcon"
-        status="{{status}}"
-        items="{{items}}">
-    </starlog-cache>
     <div class="feed">
       <template is="dom-repeat"
                 items="{{items}}"
                 id="posts">
-        <paper-material class="entry layout horizontal">
-          <img class="icon" src="{{icon}}"/>
+        <paper-material>
           <div class="flex">
-            <div class="name">{{name}}</div>
-            <div class="title">{{item.title}}</div>
+            <span>#</span>
+            <span class="seqnr">{{item.index}}</span>
+            <span class="title">{{item.element.title}}</span>
             <template is="dom-if"
                       if="{{editable}}">
               <div class="links layout horizontal end-justified">
                 <iron-icon icon="link"
-                           seqnr="{{item.seqnr}}"
+                           index="{{item.index}}"
                            on-click="viewPost">
                 </iron-icon>
-                <iron-icon icon="create"
-                           seqnr="{{item.seqnr}}"
-                           on-click="editPost">
-                </iron-icon>
+                <!-- <iron-icon icon="create" -->
+                <!--            index="{{item.index}}" -->
+                <!--            on-click="editPost"> -->
+                <!-- </iron-icon> -->
               </div>
             </template>
           </div>
@@ -93,31 +68,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script>
     Polymer({
       is: 'feed-view',
-      properties: {
-        name: String
-      },
-      ready: function() {
-        var self = this
-        self.items = []
-        self.path = this.getAttribute('path')
-      },
-      load: function (path) {
-        var self = this
-        self.path = path
-        self.$.cache.load(path)
-      },
-      gotIcon: function (ev) {
-        this.icon = '/ipfs/' + ev.detail
-      },
-      setIcon: function (item, done) {
-        this.$.cache.setIcon(item, done)
-      },
+      behaviors: [StarlogBehavior],
       viewPost: function (e) {
-        this.fire('view', e.model.item.seqnr)
+        this.fire('view', { log: this.path,
+                            seqnr: e.model.item.index })
       },
       editPost: function (e) {
-        this.fire('edit', e.model.item.seqnr)
+        this.fire('edit', e.model.item.index)
       }
-    });
+    })
   </script>
 </dom-module>

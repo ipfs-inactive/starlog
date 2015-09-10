@@ -6,6 +6,7 @@
   <meta charset="utf-8">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Starlog</title>
   <!-- Place favicon.ico in the `app/` directory -->
 
@@ -16,6 +17,8 @@
   <!-- build:js bower_components/webcomponentsjs/webcomponents-lite.min.js -->
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <!-- endbuild -->
+
+  <script src="node_modules/ipfs-api/dist/ipfsapi.js"></script>
 
   <!-- will be replaced with elements/elements.vulcanized.html -->
   <link rel="import" href="elements/elements.html">
@@ -36,26 +39,34 @@
 
 <body unresolved class="fullbleed">
   <template is="dom-bind" id="app">
-    <ipfs-api id="ipfs"></ipfs-api>
     <scroll-events on-bottom="onBottom"></scroll-events>
-    <starlog-cache
-        on-icon="setIcon"
-        id="cache"
-        items="{{items}}">
-    </starlog-cache>
     <div class="layout vertical">
-      <iron-pages attr-for-selected="data-route"
+      <iron-pages attr-for-selected="view"
                   class="fit offset"
-                  selected="{{route}}">
-        <section data-route="home">
-          <paper-drawer-panel id="drawer">
-            <div drawer peeking="true">
-              <paper-material class="compose"
+                  selected="{{view}}">
+        <section view="home">
+          <paper-drawer-panel
+             peeking="true"
+             id="drawer"
+             drawerToggleAttribute="close">
+            <div drawer>
+              <paper-material class="menu layout horizontal flex"
                               on-click="onCompose">
-                <iron-icon icon="add"></iron-icon>New post
+                <iron-icon class="narrow" icon="add"></iron-icon>
+                <span class="menutext flex">New post</span>
+              </paper-material>
+              <paper-material class="menu">
+                <iron-icon icon="search"></iron-icon>
+                <input id="titlesearch"
+                       value="{{titlesearch}}"
+                       on-change="searchChange"></input>
               </paper-material>
               <feed-view
+                  on-update="updateHash"
                   on-view="viewPost"
+                  id="myfeed"
+                  icon="{{myicon}}"
+                  name="{{myname}}"
                   items="{{items}}"
                   status="{{status}}"
                   editable="true">
@@ -63,13 +74,17 @@
             </div>
             <paper-material main class="homescreen layout vertical">
               <div class="padded">
-                <h2>{{name}}</h2>
+                <img class="icon" src="{{myicon}}"/>
+                <h2>{{myname}}</h2>
                 <template is="dom-if" if="{{!compose}}">
                   <p>
-                    <a href="{{permalink}}">Link to this log</a>
+                    <a href="{{logLink(local)}}">Link to this log</a>
                   </p>
                   <p>
-                    Select icon
+                    <a href="{{gatewayLink(local)}}">Gateway link</a>
+                  </p>
+                  <p>
+                    Select icon:
                     <ipfs-add-file on-add="updateIcon">
                     </ipfs-add-file>
                   </p>
@@ -77,6 +92,7 @@
               </div>
               <template is="dom-if" if="{{compose}}">
                 <compose-message id="editor"
+                                 on-cancel="cancelCompose"
                                  on-post="post">
                 </compose-message>
               </template>
@@ -84,41 +100,51 @@
           </paper-drawer-panel>
         </section>
 
-        <section data-route="reading">
+        <section view="reading">
           <paper-drawer-panel id="drawer2">
             <div drawer>
             </div>
           </paper-drawer-panel>
         </section>
 
-        <section data-route="starlog">
+        <section view="starlog">
           <starlog-view
               items="{{items}}"
+              on-view="viewPost"
               id="starlog"
               path="{{starlogpath}}"
               seqnr="{{seqnr}}">
           </starlog-view>
         </section>
 
-        <section data-route="init">
+        <section view="init">
           <initialize-feed on-initialized="feedInitialized"></initialize-feed>
         </section>
 
       </iron-pages>
-      <div class="toolbar layout horizontal justified">
-        <template is="dom-if" if="{{!readonly}}">
-          <paper-toolbar class="paper-header">
-            <paper-tabs selected="{{page}}">
-              <paper-tab>Home</paper-tab>
-              <paper-tab>Reading</paper-tab>
-            </paper-tabs>
-          </paper-toolbar>
-          <div class="spinner layout horizontal center">
-            <span class="status">{{status}}</span>
-            <paper-spinner active="{{status}}"></paper-spinner>
+      <paper-toolbar class="paper-header">
+        <div class="toolbar layout horizontal justified">
+          <div>
+            <template is="dom-if" if="{{!readonly}}">
+              <paper-tabs
+                  selected="{{route}}"
+                  attr-for-selected="data-route">
+                <paper-tab data-route="/home">Home</paper-tab>
+              </paper-tabs>
+            </template>
           </div>
-        </template>
-      </div>
+          <iron-pages attr-for-selected="view"
+                      selected="{{view}}">
+            <div class="textsearch" view="starlog">
+              <input
+                  value="{{textsearch}}"
+                  id="textsearch"
+                  on-change="textsearchChange"></input>
+              <iron-icon icon="search"></iron-icon>
+            </div>
+          </iron-pages>
+        </div>
+      </paper-toolbar>
     </div>
   </template>
 </body>
@@ -126,17 +152,40 @@
 <script>
 var app = document.querySelector('#app')
 
-app.post = function (env) {
-
-  app.$.drawer.openDrawer()
-  app.$.cache.append(env.detail)
-  document.querySelector('#editor').clear()
-
-  app.compose = false
+app.properties = {
+  readonly: {
+    type: Boolean,
+    value: true
+  },
+  compose: {
+    type: Boolean,
+    value: false
+  },
+  route: {
+    type: String,
+    observer: 'routeChanged'
+  }
 }
 
-app.followPermalink = function () {
-  page(app.permalink)
+app.routeChanged = function () {
+  // this.view = this.route.split('/')[1]
+  // page.redirect('/home')
+}
+
+app.updateHash = function (ev) {
+  app.local = ev.detail
+  app.$.myfeed.load(app.local)
+}
+
+app.post = function (env) {
+  app.compose = false
+  app.$.drawer.openDrawer()
+  app.$.myfeed.append(env.detail)
+  app.$.editor.clear()
+}
+
+app.cancelCompose = function (env) {
+  app.compose = false
 }
 
 app.onCompose = function () {
@@ -144,79 +193,86 @@ app.onCompose = function () {
   app.$.drawer.closeDrawer()
 }
 
-app.properties = {
-  page: {
-    type: Number,
-    observer: 'pageChanged'
-  }
-}
-
-app.feedInitialized = function () {
-  app.initialize()
-  page('/home')
+app.feedInitialized = function (ev) {
+  app.local = ev.detail
+  page.redirect('/home')
 }
 
 app.updateIcon = function (ev) {
-  app.$.feed.setIcon(ev.detail)
+  app.$.myfeed.setIcon(ev.detail)
 }
 
 app.viewPost = function (ev) {
-  page('/starlog/' + app.id + '/' + ev.detail)
-}
-
-app.pageChanged = function () {
-  if (!this.route) return
-  if (this.page === 0 && this.route != 'home') {
-    page('/home')
-  } else if (this.page === 1) {
-    page('/reading')
-  }
+  page('/starlog/' + ev.detail.log + '/' + ev.detail.seqnr)
 }
 
 app.onBottom = function () {
-  if (app.route == 'starlog') {
-    app.$.cache.loadMessages(5)
+  if (app.view == 'starlog' &&
+      app.seqnr == 'latest') {
+    app.$.starlog.loadMessages(5)
   }
 }
 
-app.initialize = function () {
-  var ipfs = document.querySelector('ipfs-api').api
-  this.page = 0
-  app.compose = false
+app.logLink = function (hash) {
+  return '/starlog/' + hash + '/latest'
+}
+
+app.gatewayLink = function (hash) {
+  var selfhash = window.location.pathname.split('/')[2]
+  return 'http://ipfs.io/ipfs/' + selfhash + '#!/starlog/' + hash + '/latest'
+}
+
+app.searchChange = function (e) {
+  app.$.myfeed.load(app.local,
+                    undefined,
+                    e.target.value ? { title: e.target.value } : {})
+}
+
+app.textsearchChange = function (e) {
+  app.$.starlog.load(app.loghash,
+                     undefined,
+                     e.target.value ? { body: e.target.value } : {})
+}
+
+app.home = function () {
+  app.route = '/home'
+  app.view = 'home'
+  var ipfs = ipfsAPI()
 
   ipfs.id(function (err, res) {
-    if (err) {
-      app.readonly = true
-      return
-    }
+    if (err) return
+
     app.readonly = false
 
-    app.id = res.ID
-    app.permalink = '/starlog/' + app.id + '/latest'
-
-    if (app.id) {
-      ipfs.object.get('/ipns/' + app.id, function (err, res) {
-        if (err) throw err
-
-        var type
-        try {
-          type = JSON.parse(res.Data).type
-          app.name = JSON.parse(res.Data).name
-        } catch (e) {}
-
-        if (type === 'starlog-feed') {
-          app.$.cache.load(app.id)
-        } else {
-          page('/init')
-        }
-      })
-    } else {
-      // running on gateway, for example
-    }
+    ipfs.name.resolve(res.ID, function (err, res) {
+      if (err) throw err
+      var split = res.Path.split('/')
+      var search = app.$.titlesearch.value
+      app.local = split[split.length - 1]
+      app.$.myfeed.load(app.local,
+                        undefined,
+                        search ? { title: search } : {})
+    })
   })
 }
 
-app.addEventListener('dom-change', app.initialize)
+app.init = function () {
+  app.view = 'init'
+}
+
+app.starlog = function (loghash, seqnr) {
+  app.view = 'starlog'
+  app.loghash = loghash
+  app.seqnr = parseInt(seqnr) || undefined
+
+  var search = app.$.textsearch.value
+  app.$.starlog.load(app.loghash,
+                     app.seqnr,
+                     search ? { body: search } : {},
+                     app.seqnr ? 1 : undefined)
+}
+
+window.addEventListener("hashchange", app.routeChanged, false)
 
 </script>
 </html>

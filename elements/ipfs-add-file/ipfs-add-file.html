@@ -1,7 +1,4 @@
-
-<link rel="import" href="../ipfs-api/ipfs-api.html">
-<link rel="import" href="../browser-buffer/browser-buffer.html">
-
+<script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
 <script src="../../node_modules/drag-drop/dragdrop.bundle.js"></script>
 
 <dom-module id="ipfs-add-file">
@@ -20,53 +17,49 @@
     }
   </style>
   <template>
-    <ipfs-api id="ipfs"></ipfs-api>
-    <browser-buffer id="buffer"></browser-buffer>
     <input type="file" style="display:none;" id="file"></input>
     <div id="droparea" on-click="selectFile">
       <p>Drag and drop your file here, or click to select a file</p>
     </div>
   </template>
   <script>
-  Polymer({
-    is: 'ipfs-add-file',
-    selectFile: function () {
-      this.$.file.click()
-    },
-    handleFile: function (file) {
-      var self = this
+    var ipfs = ipfsAPI()
+    Polymer({
+      is: 'ipfs-add-file',
+      selectFile: function () {
+        this.$.file.click()
+      },
+      handleFile: function (file) {
+        var self = this
 
-      function add (data) {
-        self.ipfs.add(data, function (err, res) {
-          if (err) throw err
-          self.fire('add', res[0].Hash)
+        function add (data) {
+          ipfs.add(data, function (err, res) {
+            if (err) throw err
+            self.fire('add', res[0].Hash)
+          })
+        }
+
+        var reader = new window.FileReader()
+        reader.onload = function () {
+          var data = reader.result.substr(reader.result.indexOf(',') + 1)
+          data = new ipfs.Buffer(data, 'base64')
+          add(data)
+        }
+        // TODO: use array buffers instead of base64 strings
+        reader.readAsDataURL(file)
+
+      },
+      ready: function () {
+        var self = this
+
+        DragDrop(self.$.droparea, function (files) {
+          self.handleFile(files[0])
         })
+
+        self.$.file.onchange = function () {
+          self.handleFile(self.$.file.files[0])
+        }
       }
-
-      var reader = new window.FileReader()
-      reader.onload = function () {
-        var data = reader.result
-        data = new self.Buffer(data.substr(data.indexOf(',') + 1), 'base64')
-        add(data)
-      }
-      // TODO: use array buffers instead of base64 strings
-      reader.readAsDataURL(file)
-
-    },
-    ready: function () {
-      var self = this
-
-      self.ipfs = self.$.ipfs.api
-      self.Buffer = self.$.buffer.Buffer
-
-      DragDrop(self.$.droparea, function (files) {
-        self.handleFile(files[0])
-      })
-
-      self.$.file.onchange = function () {
-        self.handleFile(self.$.file.files[0])
-      }
-    }
-  })
+    })
   </script>
 </dom-module>
