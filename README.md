@@ -33,18 +33,27 @@ When you search for one or more words, they are also made into a (very sparse) b
 
 # Dev
 
-Make sure your ipfs daemon is running with API_ORIGIN set to '*'
+### Install
+
+Starlog uses both [npm](https://www.npmjs.com/) and [Bower](http://bower.io/) to install dependencies. If you do not have them, you'll need to install them first.
+
+```bash
+bower install
+npm install
+````
+
+### Run
+
+Make sure your ipfs daemon is running with API_ORIGIN set to '*':
 
 ```bash
 export API_ORIGIN="*"
 ipfs daemon
 ```
 
-Starlog uses both [npm](https://www.npmjs.com/) and [Bower](http://bower.io/) to install dependencies. If you do not have them, you'll need to install them first.
+Leave that running, and then run the followingin a new console window:
 
-```
-$ bower install
-$ npm install
+```bash
 $ npm run serve
 # open in localhost:8082
 ```
