@@ -246,40 +246,46 @@ app.home = function () {
   app.view = 'home'
   var ipfs = ipfsAPI()
 
-  if (app.local) {
-    app.loadMyFeed()
+  if (!app.local) {
+    app.setup()
   } else {
-    ipfs.id(function (err, res) {
-      if (err) return
-      ipfs.name.resolve(res.ID, function (err, res) {
-        if (err) throw err
-        var split = res.Path.split('/')
-        app.local = split[split.length - 1]
-
-        // check if it's really a starlog feed
-        ipfs.object.get(app.local, function (err, res) {
-          if (err) throw err
-
-          var type
-          try {
-            type = JSON.parse(res.Data).type
-          } catch (e) {}
-
-          if (type === 'starlog') {
-            app.loadMyFeed()
-          } else {
-            page('/init')
-          }
-        })
-
-        app.loadMyFeed()
-      })
-    })
+    app.loadMyFeed()
   }
 }
 
 app.init = function () {
   app.view = 'init'
+}
+
+app.setup = function () {
+  // check if we have a local log
+  ipfs.id(function (err, res) {
+    if (err) {
+      // id not available, maybe on gateway.
+      app.readonly = true
+      return
+    }
+    ipfs.name.resolve(res.ID, function (err, res) {
+      if (err) throw err
+      var split = res.Path.split('/')
+      app.local = split[split.length - 1]
+
+      // check if it's really a starlog feed
+      ipfs.object.get(app.local, function (err, res) {
+        if (err) throw err
+
+        var type
+        try {
+          type = JSON.parse(res.Data).type
+        } catch (e) {}
+        if (type === 'starlog-feed') {
+          page('/home')
+        } else {
+          page('/init')
+        }
+      })
+    })
+  })
 }
 
 app.starlog = function (loghash, seqnr) {
