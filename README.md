@@ -51,7 +51,7 @@ export API_ORIGIN="*"
 ipfs daemon
 ```
 
-Leave that running, and then run the followingin a new console window:
+Leave that running, and then run the following in a new console window:
 
 ```bash
 $ npm run serve
