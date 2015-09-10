@@ -36,7 +36,7 @@ When you search for one or more words, they are also made into a (very sparse) b
 Make sure your ipfs daemon is running with API_ORIGIN set to '*'
 
 ```bash
-export API_ORIGIN="http://localhost:8080"
+export API_ORIGIN="*"
 ipfs daemon
 ```
 
