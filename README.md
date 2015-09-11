@@ -44,7 +44,7 @@ npm install
 
 ### Run
 
-Make sure your ipfs daemon is running with API_ORIGIN set to '*', and using --unrestricted-api
+Make sure your ipfs daemon is running with API_ORIGIN set to '*', and using `--unrestricted-api`:
 
 ```bash
 export API_ORIGIN="*"
