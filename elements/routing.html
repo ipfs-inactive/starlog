@@ -5,9 +5,7 @@
 
     var app = document.querySelector('#app')
 
-    page('/', function () {
-      page.redirect('/home')
-    })
+    page('/', app.setup)
 
     page('/home', app.home)
 
