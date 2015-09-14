@@ -197,7 +197,7 @@ app.onCompose = function () {
 app.editPost = function (ev) {
   app.compose = true
   var el = ev.detail.element
-
+  app.$.drawer.closeDrawer()
   app.$.editor.init({ title: el.title,
                       body: el.body,
                       updates: "#" + ev.detail.index })
