@@ -49,8 +49,7 @@ npm install
 Make sure your ipfs daemon is running with API_ORIGIN set to 'http://localhost:8082', and using `--unrestricted-api`:
 
 ```bash
-export API_ORIGIN="http://localhost:8082"
-ipfs daemon --unrestricted-api
+API_ORIGIN="http://localhost:8082" ipfs daemon --unrestricted-api
 ```
 
 Leave that running, and then run the following in a new console window:
