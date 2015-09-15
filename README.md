@@ -31,7 +31,9 @@ Search is implemented by taking the text of the entries in the leaves of the tre
 
 When you search for one or more words, they are also made into a (very sparse) [bloom filter](https://en.wikipedia.org/wiki/Bloom_filter). You can then check this against whole subtrees, and throw them away if they give a negative.
 
-# Dev
+# Developing
+
+WARNING, these special settings are for development only, and are concidered unsafe for normal ipfs usage.
 
 ### Install
 
@@ -44,11 +46,10 @@ npm install
 
 ### Run
 
-Make sure your ipfs daemon is running with API_ORIGIN set to '*', and using `--unrestricted-api`:
+Make sure your ipfs daemon is running with API_ORIGIN set to 'http://localhost:8082', and using `--unrestricted-api`:
 
 ```bash
-export API_ORIGIN="*"
-ipfs daemon --unrestricted-api
+API_ORIGIN="http://localhost:8082" ipfs daemon --unrestricted-api
 ```
 
 Leave that running, and then run the following in a new console window:
