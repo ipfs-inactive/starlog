@@ -2,10 +2,21 @@
 <script src="../../node_modules/ipfs-api/dist/ipfsapi.js"></script>
 
 <script>
+
+  var clone = function (arr) {
+    var acc = []
+    for (var i = 0 ; i < arr.length ; i++) {
+      acc.push(arr[i])
+    }
+    return acc
+  }
+
   StarlogBehavior = {
     properties: {
       items: { type: Array,
                value: [] },
+      updates: { type: Object,
+                 value: {} },
       filter: { type: Object,
                  value: {} },
       name: { type: String,
@@ -24,6 +35,11 @@
       self.path = path
       self.filter = filter
       self.offset = offset
+      self.locked = false
+
+      // reset
+      self.items = []
+      self.updates = {}
 
       self._onLoad()
 
@@ -55,34 +71,83 @@
       aolog.restore(path + '/log', function (err, res) {
         if (err) throw err
         self.log = res
-        self.items = []
         self.loadMessages(nr)
       })
     },
-    loadMessages: function (num) {
+    take: function (num, cb) {
+      // since take from aolog might be returning updated
+      // entries, which will not be shown,
+      // we will have to retry until we have the right number.
+
+      // note that the result may have indicies out of order, since
+      // updates to earlier posts might be found in the beginning of the log
+
       var self = this
-      num = num || 5
+      var targetlength = self.items.length + num
+      var items = self.items
 
       if (!this.log) return
 
-      var iteropts = {
+      var iter = self.log.iterator({
         reverse: true,
         offset: self.offset,
-        filter: this.filter
+        filter: self.filter
+      })
+
+      var iterate = function () {
+        iter.take(targetlength - items.length, function (err, res) {
+          if (err) throw err
+
+          // EOF?
+          if (res.length == 0) {
+            return cb(null, cb(null, items))
+          }
+
+          // update offset
+          self.offset = res[res.length - 1].index - 1
+          //items = items.concat(res)
+
+          for (var r = 0 ; r < res.length ; r++) {
+            var push = res[r]
+            // does this update another item?
+            if (push.element.updates) {
+              var idx = parseInt(push.element.updates.substr(1)) // ex: #98
+              self.updates[idx] = push
+            } else {
+              while (self.updates[push.index]) {
+                push = self.updates[push.index]
+              }
+              items.push(push)
+            }
+          }
+
+          if (items.length == targetlength) {
+            cb(null, items)
+          } else {
+            iterate()
+          }
+        })
       }
 
-      var iter = self.log.iterator(iteropts)
+      iterate()
 
-      iter.take(num, function (err, res) {
+    },
+    loadMessages: function (num) {
+      var self = this
+      num = num || 10
+      if (!this.log) return
+
+      if (self.locked) return
+
+      self.locked = true
+      self.take(num, function (err, res) {
         if (err) throw err
-        if (res.length > num) return self.exausted = true
+        // TODO, instead of calling splice each time,
+        // which would cause re-rendering,
+        // we're cloning and re-setting
 
-        for (var i = 0 ; i < res.length ; i++) {
-          self.push('items', res[i])
-        }
-        if (res.length) {
-          self.offset = res[res.length - 1].index - 1
-        }
+        self.items = clone(res)
+        self.locked = false
       })
     },
     setIcon: function (hash) {

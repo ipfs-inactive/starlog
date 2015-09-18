@@ -64,6 +64,7 @@
               <feed-view
                   on-update="updateHash"
                   on-view="viewPost"
+                  on-edit="editPost"
                   id="myfeed"
                   icon="{{myicon}}"
                   name="{{myname}}"
@@ -73,10 +74,10 @@
               </feed-view>
             </div>
             <paper-material main class="homescreen layout vertical">
-              <div class="padded">
-                <img class="icon" src="{{myicon}}"/>
-                <h2>{{myname}}</h2>
-                <template is="dom-if" if="{{!compose}}">
+              <template is="dom-if" if="{{!compose}}">
+                <div class="padded">
+                  <img class="icon" src="{{myicon}}"/>
+                  <h2>{{myname}}</h2>
                   <p>
                     <a href="{{logLink(local)}}">Link to this log</a>
                   </p>
@@ -88,14 +89,14 @@
                     <ipfs-add-file on-add="updateIcon">
                     </ipfs-add-file>
                   </p>
-                </template>
-              </div>
-              <template is="dom-if" if="{{compose}}">
-                <compose-message id="editor"
-                                 on-cancel="cancelCompose"
-                                 on-post="post">
-                </compose-message>
+                </div>
               </template>
+              <compose-message flex
+                               hidden="{{!compose}}"
+                               id="editor"
+                               on-cancel="cancelCompose"
+                               on-post="post">
+              </compose-message>
             </paper-material>
           </paper-drawer-panel>
         </section>
@@ -189,7 +190,17 @@ app.cancelCompose = function (env) {
 
 app.onCompose = function () {
   app.compose = true
+  app.$.editor.clear()
   app.$.drawer.closeDrawer()
+}
+
+app.editPost = function (ev) {
+  app.compose = true
+  var el = ev.detail.element
+  app.$.drawer.closeDrawer()
+  app.$.editor.init({ title: el.title,
+                      body: el.body,
+                      updates: "#" + ev.detail.index })
 }
 
 app.feedInitialized = function (ev) {
@@ -206,8 +217,7 @@ app.viewPost = function (ev) {
 }
 
 app.onBottom = function () {
-  if (app.view == 'starlog' &&
-      app.seqnr == 'latest') {
+  if (app.view == 'starlog' && app.latest) {
     app.$.starlog.loadMessages(5)
   }
 }
@@ -292,6 +302,7 @@ app.starlog = function (loghash, seqnr) {
   app.view = 'starlog'
   app.route = '/starlog'
   app.loghash = loghash
+  app.latest = seqnr === 'latest'
   app.seqnr = parseInt(seqnr) || undefined
 
   var search = app.$.textsearch.value

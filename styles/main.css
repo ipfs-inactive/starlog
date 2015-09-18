@@ -52,6 +52,10 @@ paper-toolbar {
   bottom: 8px;
 }
 
+compose-message {
+  height: 100%;
+}
+
 .homescreen {
   background: #fff;
   margin-left: 4px;

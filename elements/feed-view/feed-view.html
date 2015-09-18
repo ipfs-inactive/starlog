@@ -38,11 +38,19 @@
                 id="posts">
         <paper-material>
           <div class="flex" on-click="viewPost" index="{{item.index}}">
-            <span>#</span>
-            <span class="seqnr">{{item.index}}</span>
+            <strong>
+              <span>#</span>
+              <span class="seqnr">{{item.index}}</span>
+            </strong>
             <span class="title">{{item.element.title}}</span>
             <template is="dom-if"
                       if="{{editable}}">
+              <div class="links layout horizontal end-justified">
+                <iron-icon icon="create"
+                           index="{{item.index}}"
+                           on-click="editPost">
+                </iron-icon>
+              </div>
             </template>
           </div>
         </paper-material>
@@ -59,7 +67,14 @@
                             seqnr: e.model.item.index })
       },
       editPost: function (e) {
-        this.fire('edit', e.model.item.index)
+        var self = this
+        e.preventDefault()
+        e.stopPropagation()
+        this.log.iterator({ offset: e.model.item.index })
+          .next(function (err, res) {
+            if (err) throw err
+            self.fire('edit', res)
+          })
       }
     })
   </script>

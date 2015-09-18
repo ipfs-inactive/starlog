@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "dependencies": {
-    "aolog": "^3.2.1",
+    "aolog": "^3.2.3",
     "buffer": "^3.4.3",
     "drag-drop": "^2.3.0",
     "ipfs-api": "^2.3.2",

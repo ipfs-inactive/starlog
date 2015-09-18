@@ -8,6 +8,9 @@
     :host {
       display: block;
     }
+    #bodywrap {
+      overflow: auto;
+    }
     button {
       border: 0;
       margin-right: 6px;
@@ -19,9 +22,6 @@
     }
     button:disabled {
       background: #aaa;
-    }
-    paper-material {
-      background: white;
     }
     .box {
       background: white;
@@ -38,35 +38,48 @@
     }
     section {
       padding: 6px;
+      backgroud: green;
+    }
+    .main {
+      display: block !important;
+      height: 100%;
     }
   </style>
   <template>
-    <paper-material>
-      <paper-tabs selected="{{section}}">
-        <paper-tab>Compose</paper-tab>
-        <paper-tab on-click="preview">Preview</paper-tab>
-      </paper-tabs>
-
-      <iron-pages selected="{{section}}">
-        <section>
-          <basic-autosize-textarea value="{{title}}"
-                                   id="title"
-                                   placeholder="Title">
-          </basic-autosize-textarea>
-          <basic-autosize-textarea id="body"
-                                   value="{{body}}"
-                                   placeholder="Body (markdown)"
-                                   minimum-rows="14">
-          </basic-autosize-textarea>
-        </section>
-        <section>
-          <h1>{{title}}</h1>
-          <div id="preview"></div>
-        </section>
-      </iron-pages>
-      <div class="layout flex horizontal end-justified">
+    <paper-material class="main layout vertical">
+      <div>
+        <paper-tabs selected="{{section}}">
+          <paper-tab>Compose</paper-tab>
+          <paper-tab on-click="preview">Preview</paper-tab>
+        </paper-tabs>
+      </div>
+      <div flex>
+        <iron-pages selected="{{section}}">
+          <section>
+            <basic-autosize-textarea value="{{title}}"
+                                     id="title"
+                                     placeholder="Title">
+            </basic-autosize-textarea>
+            <basic-autosize-textarea id="body"
+                                     value="{{body}}"
+                                     placeholder="Body (markdown)"
+                                     minimum-rows="14">
+            </basic-autosize-textarea>
+          </section>
+          <section>
+            <h1>{{title}}</h1>
+            <div id="preview"></div>
+          </section>
+        </iron-pages>
+      </div>
+      <div class="layout horizontal end-justified">
         <button on-click="cancel">cancel</button>
-        <button on-click="post">post</button>
+        <template is="dom-if" if="{{!showupdate}}">
+          <button on-click="post">post</button>
+        </template>
+        <template is="dom-if" if="{{showupdate}}">
+          <button on-click="post">update</button>
+        </template>
       </div>
     </paper-material>
   </template>
@@ -77,6 +90,10 @@
     (function () {
       Polymer({
         is: 'compose-message',
+        properties: {
+          showupdate: { type: Boolean,
+                        value: false }
+        },
         ready: function() {
           var self = this
           var feedhash = this.getAttribute('hash')
@@ -89,16 +106,25 @@
         clear: function () {
           this.title = ""
           this.body = ""
+          this.updates = undefined
+          this.showupdate = false
           this.section = 0
         },
         post: function () {
-          this.fire('post', {title: this.title,
-                             body: this.body})
+          this.fire('post', { title: this.title,
+                              updates: this.updates,
+                              body: this.body })
           this.clear()
         },
         cancel: function () {
           this.fire('cancel')
-         }
+        },
+        init: function (attributes) {
+          this.title = attributes.title
+          this.body = attributes.body
+          this.updates = attributes.updates
+          this.showupdate = (typeof this.updates !== "undefined")
+        }
       });
     })();
   </script>
