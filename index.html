@@ -55,11 +55,14 @@
                 <iron-icon class="narrow" icon="add"></iron-icon>
                 <span class="menutext flex">New post</span>
               </paper-material>
-              <paper-material class="menu">
+              <paper-material class="menu layout horizontal">
                 <iron-icon icon="search"></iron-icon>
                 <input id="titlesearch"
+                       class="menutext"
                        value="{{titlesearch}}"
-                       on-change="searchChange"></input>
+                       on-change="searchChange"
+                       flex>
+                </input>
               </paper-material>
               <feed-view
                   on-update="updateHash"
@@ -252,6 +255,7 @@ app.loadMyFeed = function () {
 }
 
 app.home = function () {
+  app.compose = false
   app.route = '/home'
   app.view = 'home'
   var ipfs = ipfsAPI()
