@@ -171,8 +171,11 @@ app.properties = {
   }
 }
 
-app.routeChanged = function () {
-  this.view = this.route.split('/')[1]
+app.routeChanged = function (a) {
+  if (a.newURL) {
+    var idx = a.newURL.indexOf('/#!') + 3
+    page(a.newURL.substr(idx))
+  }
 }
 
 app.updateHash = function (ev) {
