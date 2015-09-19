@@ -204,9 +204,11 @@ app.editPost = function (ev) {
   app.compose = true
   var el = ev.detail.element
   app.$.drawer.closeDrawer()
+
+  var updates = el.updates || "#" + ev.detail.index
   app.$.editor.init({ title: el.title,
                       body: el.body,
-                      updates: "#" + ev.detail.index })
+                      updates: updates })
 }
 
 app.feedInitialized = function (ev) {

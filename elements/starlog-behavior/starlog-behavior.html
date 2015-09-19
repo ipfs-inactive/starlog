@@ -15,10 +15,10 @@
     properties: {
       items: { type: Array,
                value: [] },
-      updates: { type: Object,
-                 value: {} },
+      updatefor: { type: Object,
+                   value: {} },
       filter: { type: Object,
-                 value: {} },
+                value: {} },
       name: { type: String,
               notify: true },
       icon: { type: String,
@@ -39,7 +39,7 @@
 
       // reset
       self.items = []
-      self.updates = {}
+      self.updatefor = {}
 
       self._onLoad()
 
@@ -108,17 +108,34 @@
           //items = items.concat(res)
 
           for (var r = 0 ; r < res.length ; r++) {
-            var push = res[r]
+            var result = res[r]
+
             // does this update another item?
-            if (push.element.updates) {
-              var idx = parseInt(push.element.updates.substr(1)) // ex: #98
-              self.updates[idx] = push
-            } else {
-              while (self.updates[push.index]) {
-                push = self.updates[push.index]
+            if (result.element.updates) {
+              var idx = result.element.updates || "#" + result.index
+              // the first update we find will be the latest one
+              if (!self.updatefor[idx]) self.updatefor[idx] = result
+
+              // remove other refs
+              for (var i = 0 ; i < items.length ; i++) {
+                if (items[i].element.updates === result.element.updates) {
+                  items.splice(i--, 1)
+                }
               }
-              items.push(push)
             }
+
+            // is this the original that was updated?
+            if (self.updatefor["#" + result.index]) {
+              // remove other refs
+              for (var i = 0 ; i < items.length ; i++) {
+                if (items[i].element.updates === "#" + result.index) {
+                  items.splice(i--, 1)
+                }
+              }
+              result = self.updatefor["#" + result.index]
+            }
+
+            items.push(result)
           }
 
           if (items.length == targetlength) {
@@ -142,7 +159,7 @@
       self.locked = true
       self.take(num, function (err, res) {
         if (err) throw err
-        // TODO, instead of calling splice each time,
+        // HACK, instead of calling splice each time,
         // which would cause re-rendering,
         // we're cloning and re-setting
 
