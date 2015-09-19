@@ -2,21 +2,29 @@
 <dom-module id="scroll-events">
   <script>
     (function () {
+      function getDocHeight() {
+        var D = document
+        return Math.max(
+          D.body.scrollHeight, D.documentElement.scrollHeight,
+          D.body.offsetHeight, D.documentElement.offsetHeight,
+          D.body.clientHeight, D.documentElement.clientHeight
+        )
+      }
       Polymer({
         is: 'scroll-events',
         threshold: 300,
         attached: function() {
           var self = this
           setInterval(function () {
-            var scroll = window.innerHeight + document.body.scrollTop
-            var height = document.body.scrollHeight
+            var height = getDocHeight()
+            var scroll = window.scrollY + window.document.body.clientHeight
 
             if (scroll >= height - self.threshold) {
               self.fire('bottom')
             }
           }, 100)
         }
-      });
-    })();
+      })
+    })()
   </script>
 </dom-module>
